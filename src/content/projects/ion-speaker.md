@@ -5,7 +5,7 @@ status: in design
 short: Project Ion
 order: 1
 cover: /images/ion-speaker/cover.jpg
-coverCaption: "Amp board, KiCad top view, October 2026: layout in progress."
+coverCaption: "Amp board, October 2026: TAS5825M amplifier schematic and the routed PoE input."
 started: 2026-09-01
 target: End of 2027
 tags: [PoE++, ESP32-S31, TAS5825M, KiCad, ESPHome, Sendspin, Dayton drivers]
