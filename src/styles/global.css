@@ -23,7 +23,7 @@
   --display: 'Anton', 'Arial Narrow', Impact, sans-serif;
   --sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-  --wrap: 1040px;
+  --wrap: 1240px;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {

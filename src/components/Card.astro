@@ -1,37 +1,34 @@
 ---
-// Story card: image on top, label, heavy title, optional summary, meta line.
+// Archive card: image, label(s), bold title, meta line, then the summary.
 import Cover from './Cover.astro';
 interface Props {
   href: string;
   seed: string;
   cover?: string;
-  label: string;
+  labels: string[];
   title: string;
   summary?: string;
   meta?: string;
   coverLabel?: string;
-  size?: 'lg' | 'md' | 'sm';
 }
-const { href, seed, cover, label, title, summary, meta, coverLabel, size = 'md' } = Astro.props;
+const { href, seed, cover, labels, title, summary, meta, coverLabel } = Astro.props;
 ---
-<a class={`card ${size}`} href={href}>
-  <Cover seed={seed} image={cover} alt="" label={coverLabel} />
+<a class="card" href={href}>
+  <Cover seed={seed} image={cover} alt="" ratio="16 / 9" label={coverLabel} />
   <div class="body">
-    <span class="label">{label}</span>
+    <span class="label">{labels.map((l, i) => <>{i > 0 && <span class="sep">|</span>}{l}</>)}</span>
     <h3 class="title">{title}</h3>
-    {summary && <p>{summary}</p>}
     {meta && <span class="meta">{meta}</span>}
-    <slot />
+    {summary && <p>{summary}</p>}
   </div>
 </a>
 
 <style>
   .card { display: block; min-width: 0; }
-  .body { padding-top: .85rem; display: grid; gap: .45rem; }
-  .title { font-size: 1.12rem; }
-  .lg .title { font-size: 1.4rem; }
-  .sm .title { font-size: .98rem; }
-  p { margin: 0; font-size: .95rem; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .sm p { display: none; }
+  .body { padding-top: 1rem; display: grid; gap: .55rem; }
+  .sep { color: var(--ink); margin: 0 .4rem; font-weight: 400; }
+  .title { font-size: 1.22rem; line-height: 1.25; }
+  .meta { color: var(--text); }
+  p { margin: .3rem 0 0; font-size: .98rem; line-height: 1.6; color: var(--text); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .card:hover :global(.cover) { filter: brightness(1.08); }
 </style>

@@ -24,6 +24,7 @@ const projects = defineCollection({
     tags: z.array(z.string()).default([]),
     repo: z.string().url().optional(),
     cover: z.string().optional(),   // /images/... ; generated art when absent
+    coverCaption: z.string().optional(),
     short: z.string().optional(),   // short name for the nav and labels
     video,
     stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),

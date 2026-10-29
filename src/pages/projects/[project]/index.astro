@@ -3,8 +3,9 @@ import { getCollection, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Status from '../../../components/Status.astro';
 import Video from '../../../components/Video.astro';
-import Row from '../../../components/Row.astro';
-import { url } from '../../../lib/url';
+import Card from '../../../components/Card.astro';
+import Cover from '../../../components/Cover.astro';
+import { url, statusLabel } from '../../../lib/url';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -35,7 +36,14 @@ const done = chapters.filter((c) => c.data.status === 'published').length;
 
     <div class="layout">
       <div class="main">
-        <Video video={project.data.video} title={project.data.title} />
+        {!project.data.video && project.data.cover ? (
+          <figure class="hero-img">
+            <Cover seed={project.id} image={project.data.cover} alt={project.data.coverCaption ?? project.data.title} ratio="16 / 9" />
+            {project.data.coverCaption && <figcaption class="meta">{project.data.coverCaption}</figcaption>}
+          </figure>
+        ) : (
+          <Video video={project.data.video} title={project.data.title} />
+        )}
         <div class="prose"><Content /></div>
       </div>
       <aside>
@@ -54,11 +62,9 @@ const done = chapters.filter((c) => c.data.status === 'published').length;
     </div>
 
     <div class="sec" id="chapters"><h2>Build chapters</h2><span class="meta">{chapters.length} in order</span></div>
-    <section class="list2">
+    <section class="grid3">
       {chapters.map((c) => (
-        <Row href={url(`projects/${project.id}/${slug(c.id)}/`)} seed={c.id} cover={c.data.cover} label={`Chapter ${c.data.order}`} title={c.data.title} summary={c.data.summary}>
-          <Status status={c.data.status} />
-        </Row>
+        <Card href={url(`projects/${project.id}/${slug(c.id)}/`)} seed={c.id} cover={c.data.cover} coverLabel={String(c.data.order).padStart(2, '0')} labels={[project.data.short ?? project.data.title, `Chapter ${c.data.order}`]} title={c.data.title} meta={statusLabel[c.data.status]} summary={c.data.summary} />
       ))}
     </section>
   </article>
@@ -73,6 +79,8 @@ const done = chapters.filter((c) => c.data.status === 'published').length;
   .layout { display: grid; gap: 2rem; }
   @media (min-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 2.5rem; } }
   .main { min-width: 0; }
+  .hero-img { margin: 0 0 2rem; border: 1px solid var(--line); }
+  .hero-img figcaption { padding: .6rem .8rem; border-top: 1px solid var(--line); }
   .spec { border-top: 4px solid var(--accent); background: var(--panel); }
   @media (min-width: 900px) { aside { position: sticky; top: 64px; align-self: start; } }
   .spec-head { font: 800 .78rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); padding: .9rem 1rem .4rem; }
@@ -82,6 +90,7 @@ const done = chapters.filter((c) => c.data.status === 'published').length;
   dd { margin: 0; color: var(--ink); font-weight: 600; font-size: .94rem; line-height: 1.4; }
   .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
   .tags span { font: 500 .7rem/1 var(--mono); letter-spacing: .04em; padding: .4rem .5rem; border: 1px solid var(--line); color: var(--text); }
-  .list2 { display: grid; column-gap: 2.5rem; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 820px) { .list2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .grid3 { display: grid; gap: 2.6rem 1.75rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 640px) { .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 980px) { .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>

@@ -1,94 +1,86 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Cover from '../components/Cover.astro';
 import Card from '../components/Card.astro';
-import Row from '../components/Row.astro';
-import Status from '../components/Status.astro';
 import { url, statusLabel } from '../lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 const chapters = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
-const [lead, ...others] = projects;
 const slug = (id: string) => id.split('/').pop();
-const chapterHref = (c: (typeof chapters)[number]) => url(`projects/${c.data.project.id}/${slug(c.id)}/`);
 const short = (id: string) => projects.find((p) => p.id === id)?.data.short ?? id;
 const chaptersOf = (id: string) => chapters.filter((c) => c.data.project.id === id);
-const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const published = chapters.filter((c) => c.data.status === 'published').length;
 
-// "Up next": the first not-yet-published chapters of each project, interleaved.
-const queues = projects.map((p) => chaptersOf(p.id).filter((c) => c.data.status !== 'published'));
-const upNext: typeof chapters = [];
-for (let i = 0; upNext.length < 4 && i < 20; i++) for (const q of queues) if (q[i] && upNext.length < 4) upNext.push(q[i]);
+// One grid: each project's overview card, then its chapters in order.
+const items = projects.flatMap((p) => [
+  {
+    key: p.id, project: p.id, href: url(`projects/${p.id}/`), seed: p.id, cover: p.data.cover,
+    labels: [p.data.short ?? p.data.title, 'Project overview'], title: p.data.title,
+    meta: `${statusLabel[p.data.status]} · ${chaptersOf(p.id).length} chapters`, summary: p.data.tagline, coverLabel: undefined as string | undefined,
+  },
+  ...chaptersOf(p.id).map((c) => ({
+    key: c.id, project: p.id, href: url(`projects/${p.id}/${slug(c.id)}/`), seed: c.id, cover: c.data.cover,
+    labels: [short(p.id), `Chapter ${c.data.order}`], title: c.data.title,
+    meta: statusLabel[c.data.status], summary: c.data.summary, coverLabel: String(c.data.order).padStart(2, '0'),
+  })),
+]);
 ---
 <Base title="Basso Builds">
-  <div class="wrap">
-    <section class="lead">
-      <a class="lead-main" href={url(`projects/${lead.id}/`)}>
-        <Cover seed={lead.id} image={lead.data.cover} ratio="16 / 9" alt="" />
-        <div class="lead-text">
-          <span class="label">{lead.data.tags.slice(0, 2).join(' · ')}</span>
-          <h1 class="display">{lead.data.title}</h1>
-          <p>{lead.data.tagline}</p>
-          <div class="lead-meta">
-            <Status status={lead.data.status} />
-            <span class="meta">{chaptersOf(lead.id).length} chapters</span>
-            {lead.data.target && <span class="meta">Target {lead.data.target}</span>}
-          </div>
-        </div>
-      </a>
+  <section class="wrap">
+    <header class="head">
+      <h1>All projects</h1>
+      <span class="meta">{projects.length} projects · {chapters.length} chapters · {published} published</span>
+    </header>
 
-      <aside class="lead-side">
-        {others.map((p) => (
-          <Card href={url(`projects/${p.id}/`)} seed={p.id} cover={p.data.cover} label={statusLabel[p.data.status]} title={p.data.title} summary={p.data.tagline} meta={`${chaptersOf(p.id).length} chapters`} />
+    <div class="filter">
+      <span class="filter-title">Narrow by project</span>
+      <div class="chips" role="group" aria-label="Filter by project">
+        <button type="button" class="chip on" data-filter="all" aria-pressed="true">All</button>
+        {projects.map((p) => (
+          <button type="button" class="chip" data-filter={p.id} aria-pressed="false">{p.data.short ?? p.data.title} <span>{chaptersOf(p.id).length + 1}</span></button>
         ))}
-        <div class="about">
-          <span class="label">About this site</span>
-          <p>Hardware projects documented end to end: why each part was chosen, every board, the enclosure and the firmware, with video of each step.</p>
-          <a class="more" href={url('about/')}>Read more →</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      {items.map((it) => (
+        <div class="cell" data-project={it.project}>
+          <Card href={it.href} seed={it.seed} cover={it.cover} labels={it.labels} title={it.title} meta={it.meta} summary={it.summary} coverLabel={it.coverLabel} />
         </div>
-      </aside>
-    </section>
-
-    <div class="sec"><h2>Up next</h2><span class="meta">Chapters in progress</span></div>
-    <section class="grid4">
-      {upNext.map((c) => (
-        <Card size="sm" href={chapterHref(c)} seed={c.id} cover={c.data.cover} coverLabel={String(c.data.order).padStart(2, '0')} label={short(c.data.project.id)} title={c.data.title} meta={statusLabel[c.data.status]} />
       ))}
-    </section>
-
-    {projects.map((p) => (
-      <>
-        <div class="sec"><h2>{p.data.short ?? p.data.title}: build chapters</h2><a class="more" href={url(`projects/${p.id}/`)}>View project →</a></div>
-        <section class="list2">
-          {chaptersOf(p.id).map((c) => (
-            <Row href={chapterHref(c)} seed={c.id} cover={c.data.cover} label={`Chapter ${c.data.order}`} title={c.data.title} summary={c.data.summary}>
-              <Status status={c.data.status} />
-            </Row>
-          ))}
-        </section>
-      </>
-    ))}
-  </div>
+    </div>
+  </section>
 </Base>
 
+<script>
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const cells = document.querySelectorAll<HTMLElement>('.cell');
+  const apply = (f: string) => {
+    chips.forEach((c) => { const on = c.dataset.filter === f; c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); });
+    cells.forEach((el) => { el.hidden = f !== 'all' && el.dataset.project !== f; });
+  };
+  chips.forEach((c) => c.addEventListener('click', () => {
+    const f = c.dataset.filter ?? 'all';
+    apply(f);
+    try { history.replaceState(null, '', f === 'all' ? location.pathname : `#${f}`); } catch {}
+  }));
+  const start = location.hash.slice(1);
+  if (start && [...chips].some((c) => c.dataset.filter === start)) apply(start);
+</script>
+
 <style>
-  .lead { display: grid; gap: 2rem; padding-top: 1.75rem; }
-  @media (min-width: 900px) { .lead { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 2.25rem; } }
-  .lead-main { display: block; min-width: 0; }
-  .lead-text { padding-top: 1.1rem; display: grid; gap: .7rem; }
-  .lead h1 { font-size: clamp(2.6rem, 6.5vw, 4.2rem); }
-  .lead-main:hover h1 { color: var(--accent-ink); }
-  .lead-text p { margin: 0; font-size: 1.12rem; line-height: 1.55; max-width: 40rem; }
-  .lead-meta { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; }
-  .lead-side { display: grid; gap: 1.75rem; align-content: start; }
-  .about { background: var(--tint); padding: 1.1rem 1.2rem; display: grid; gap: .5rem; }
-  .about p { margin: 0; font-size: .92rem; line-height: 1.55; }
-  .about .more { font: 700 .72rem/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
-
-  .grid4 { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (min-width: 900px) { .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-
-  .list2 { display: grid; column-gap: 2.5rem; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 820px) { .list2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .head { padding: 2.75rem 0 1.5rem; display: grid; gap: .6rem; border-bottom: 2px solid var(--ink); }
+  .head h1 { font: 800 clamp(2rem, 4.5vw, 2.6rem)/1.1 var(--sans); letter-spacing: -0.025em; }
+  .filter { padding: 1.2rem 0 1.6rem; }
+  .filter-title { display: block; font: 800 .74rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin-bottom: .8rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .chip { font: 600 .9rem/1 var(--sans); color: var(--text); background: var(--bg); border: 1px solid var(--line); padding: .7rem .85rem; cursor: pointer; }
+  .chip span { font: 500 .72rem/1 var(--mono); color: var(--muted); margin-left: .35rem; }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .chip.on span { color: var(--bg); opacity: .75; }
+  .grid { display: grid; gap: 2.6rem 1.75rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 980px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .cell[hidden] { display: none; }
 </style>
