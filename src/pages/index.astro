@@ -1,86 +1,67 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Card from '../components/Card.astro';
-import { url, statusLabel } from '../lib/url';
+import Cover from '../components/Cover.astro';
+import Status from '../components/Status.astro';
+import { url } from '../lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const chapters = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
-const slug = (id: string) => id.split('/').pop();
-const short = (id: string) => projects.find((p) => p.id === id)?.data.short ?? id;
-const chaptersOf = (id: string) => chapters.filter((c) => c.data.project.id === id);
-const published = chapters.filter((c) => c.data.status === 'published').length;
-
-// One grid: each project's overview card, then its chapters in order.
-const items = projects.flatMap((p) => [
-  {
-    key: p.id, project: p.id, href: url(`projects/${p.id}/`), seed: p.id, cover: p.data.cover,
-    labels: [p.data.short ?? p.data.title, 'Project overview'], title: p.data.title,
-    meta: `${statusLabel[p.data.status]} · ${chaptersOf(p.id).length} chapters`, summary: p.data.tagline, coverLabel: undefined as string | undefined,
-  },
-  ...chaptersOf(p.id).map((c) => ({
-    key: c.id, project: p.id, href: url(`projects/${p.id}/${slug(c.id)}/`), seed: c.id, cover: c.data.cover,
-    labels: [short(p.id), `Chapter ${c.data.order}`], title: c.data.title,
-    meta: statusLabel[c.data.status], summary: c.data.summary, coverLabel: String(c.data.order).padStart(2, '0'),
-  })),
-]);
+const chapters = await getCollection('chapters');
+const countOf = (id: string) => chapters.filter((c) => c.data.project.id === id).length;
+const publishedOf = (id: string) => chapters.filter((c) => c.data.project.id === id && c.data.status === 'published').length;
 ---
 <Base title="Basso Builds">
   <section class="wrap">
     <header class="head">
       <h1>All projects</h1>
-      <span class="meta">{projects.length} projects · {chapters.length} chapters · {published} published</span>
+      <p>Hardware projects documented end to end, with the parts, the boards, the enclosure, the firmware and video of every step, so you can build your own.</p>
     </header>
 
-    <div class="filter">
-      <span class="filter-title">Narrow by project</span>
-      <div class="chips" role="group" aria-label="Filter by project">
-        <button type="button" class="chip on" data-filter="all" aria-pressed="true">All</button>
-        {projects.map((p) => (
-          <button type="button" class="chip" data-filter={p.id} aria-pressed="false">{p.data.short ?? p.data.title} <span>{chaptersOf(p.id).length + 1}</span></button>
-        ))}
-      </div>
-    </div>
-
     <div class="grid">
-      {items.map((it) => (
-        <div class="cell" data-project={it.project}>
-          <Card href={it.href} seed={it.seed} cover={it.cover} labels={it.labels} title={it.title} meta={it.meta} summary={it.summary} coverLabel={it.coverLabel} />
-        </div>
+      {projects.map((p) => (
+        <article class="project">
+          <a class="img" href={url(`projects/${p.id}/`)}>
+            <Cover seed={p.id} image={p.data.cover} alt={p.data.title} ratio="16 / 9" />
+          </a>
+          <div class="body">
+            <span class="label">{p.data.tags.slice(0, 3).join(' | ')}</span>
+            <h2><a href={url(`projects/${p.id}/`)}>{p.data.title}</a></h2>
+            <div class="metaline">
+              <Status status={p.data.status} />
+              <span class="meta">{countOf(p.id)} chapters · {publishedOf(p.id)} published</span>
+              {p.data.target && <span class="meta">Target {p.data.target}</span>}
+            </div>
+            <p class="overview">{p.data.tagline}</p>
+            {p.data.stats.length > 0 && (
+              <dl>
+                {p.data.stats.slice(0, 4).map((s) => (<div><dt class="meta">{s.label}</dt><dd>{s.value}</dd></div>))}
+              </dl>
+            )}
+            <a class="go" href={url(`projects/${p.id}/`)}>View the project and its build chapters →</a>
+          </div>
+        </article>
       ))}
     </div>
   </section>
 </Base>
 
-<script>
-  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
-  const cells = document.querySelectorAll<HTMLElement>('.cell');
-  const apply = (f: string) => {
-    chips.forEach((c) => { const on = c.dataset.filter === f; c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); });
-    cells.forEach((el) => { el.hidden = f !== 'all' && el.dataset.project !== f; });
-  };
-  chips.forEach((c) => c.addEventListener('click', () => {
-    const f = c.dataset.filter ?? 'all';
-    apply(f);
-    try { history.replaceState(null, '', f === 'all' ? location.pathname : `#${f}`); } catch {}
-  }));
-  const start = location.hash.slice(1);
-  if (start && [...chips].some((c) => c.dataset.filter === start)) apply(start);
-</script>
-
 <style>
-  .head { padding: 2.75rem 0 1.5rem; display: grid; gap: .6rem; border-bottom: 2px solid var(--ink); }
+  .head { padding: 2.75rem 0 1.75rem; display: grid; gap: .7rem; border-bottom: 2px solid var(--ink); margin-bottom: 2.25rem; }
   .head h1 { font: 800 clamp(2rem, 4.5vw, 2.6rem)/1.1 var(--sans); letter-spacing: -0.025em; }
-  .filter { padding: 1.2rem 0 1.6rem; }
-  .filter-title { display: block; font: 800 .74rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin-bottom: .8rem; }
-  .chips { display: flex; flex-wrap: wrap; gap: .6rem; }
-  .chip { font: 600 .9rem/1 var(--sans); color: var(--text); background: var(--bg); border: 1px solid var(--line); padding: .7rem .85rem; cursor: pointer; }
-  .chip span { font: 500 .72rem/1 var(--mono); color: var(--muted); margin-left: .35rem; }
-  .chip:hover { border-color: var(--ink); color: var(--ink); }
-  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-  .chip.on span { color: var(--bg); opacity: .75; }
-  .grid { display: grid; gap: 2.6rem 1.75rem; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (min-width: 980px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .cell[hidden] { display: none; }
+  .head p { margin: 0; font-size: 1.08rem; max-width: 46rem; }
+  .grid { display: grid; gap: 3rem 2.25rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .project { min-width: 0; display: grid; align-content: start; }
+  .img { display: block; border: 1px solid var(--line); }
+  .img:hover :global(.cover) { filter: brightness(1.05); }
+  .body { padding-top: 1.1rem; display: grid; gap: .7rem; }
+  h2 { font: 800 1.7rem/1.15 var(--sans); letter-spacing: -0.02em; }
+  h2 a:hover { color: var(--accent-ink); }
+  .metaline { display: flex; flex-wrap: wrap; gap: 1.1rem; align-items: center; }
+  .overview { margin: .2rem 0 0; font-size: 1.04rem; line-height: 1.6; }
+  dl { margin: .3rem 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+  dl div { padding: .65rem .2rem .65rem 0; border-bottom: 1px solid var(--line); display: grid; gap: .15rem; }
+  dd { margin: 0; color: var(--ink); font-weight: 600; font-size: .92rem; line-height: 1.35; }
+  .go { margin-top: .4rem; font: 700 .76rem/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+  .go:hover { text-decoration: underline; }
 </style>

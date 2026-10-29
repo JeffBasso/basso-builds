@@ -95,9 +95,9 @@ const here = Astro.url.pathname;
   .masthead { background: var(--bg); border-bottom: 1px solid var(--line); }
   .masthead .row { height: 76px; }
   .logo { display: flex; align-items: center; gap: .7rem; min-width: 0; }
-  .mark { flex: none; width: 30px; height: 30px; background: var(--accent); position: relative; }
-  .mark::before { content: ''; position: absolute; inset: 7px; border: 3px solid #fff; }
-  .mark::after { content: ''; position: absolute; left: 12px; top: 12px; width: 6px; height: 6px; background: var(--copper); }
+  .mark { flex: none; width: 30px; height: 30px; background: var(--accent); position: relative; border-radius: 6px; }
+  .mark::before { content: ''; position: absolute; inset: 7px; border: 3px solid #fff; border-radius: 3px; }
+  .mark::after { content: ''; position: absolute; left: 12px; top: 12px; width: 6px; height: 6px; background: var(--copper); border-radius: 1px; }
   .word { font-family: var(--display); font-size: 1.9rem; line-height: 1; letter-spacing: .01em; }
   .word b { font-weight: 400; color: var(--ink); }
   .word i { font-style: normal; color: var(--accent); }
