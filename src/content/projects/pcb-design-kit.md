@@ -4,6 +4,8 @@ tagline: Turn a Windows PC into an AI-assisted circuit board design station. Cla
 status: building
 short: PCB Design Kit
 order: 2
+cover: /images/pcb-design-kit/cover.jpg
+coverCaption: "Illustration: from schematic to routed copper."
 started: 2026-10-24
 target: Demo video first, then the full series
 tags: [Claude Code, KiCad 10, MCP, Quilter, PCBWay, GitHub Actions, PowerShell]
