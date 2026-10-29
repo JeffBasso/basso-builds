@@ -13,8 +13,6 @@ matters, such as switching loops, crystals, the antenna and the isolation barrie
 rest of the layout follows from it. It was approved on **October 27, 2026**, and the
 outline was re-cut the next day.
 
-![The amp board in KiCad's 3D view during placement](/images/ion-speaker/cover.jpg)
-
 ## The outline, three times
 
 1. **The spec said about 100 x 70 mm.** The part footprints alone add up to
