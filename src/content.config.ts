@@ -26,6 +26,8 @@ const projects = defineCollection({
     cover: z.string().optional(),   // /images/... ; generated art when absent
     coverCaption: z.string().optional(),
     short: z.string().optional(),   // short name for the nav and labels
+    boards: z.array(z.string()).default([]),  // board repos that feed this project (pcb-build-log)
+    kit: z.boolean().default(false),          // fed by the pcb-design-kit repo itself
     video,
     stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
   }),

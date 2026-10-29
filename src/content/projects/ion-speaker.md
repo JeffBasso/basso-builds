@@ -3,6 +3,7 @@ title: Project Ion
 tagline: An in-wall, tri-amped smart speaker powered by a single PoE++ Ethernet cable, with the amplifiers, DSP crossover and a room sensor hub built into the wall.
 status: in design
 short: Project Ion
+boards: [wallnode-amp]
 order: 1
 cover: /images/ion-speaker/cover.jpg
 coverCaption: "Amp board, KiCad 3D view, October 2026: placement in progress."
