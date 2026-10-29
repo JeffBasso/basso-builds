@@ -2,24 +2,15 @@
 import { statusLabel } from '../lib/url';
 interface Props { status: string }
 const { status } = Astro.props;
-const tone = ['done', 'published'].includes(status)
-  ? 'ok'
-  : ['planning', 'planned'].includes(status)
-    ? 'idle'
-    : 'live';
+const tone = ['done', 'published'].includes(status) ? 'ok' : ['planning', 'planned'].includes(status) ? 'idle' : 'live';
 ---
-<span class={`status ${tone}`}><span class="dot" aria-hidden="true"></span>{statusLabel[status] ?? status}</span>
+<span class={`status meta ${tone}`}>{statusLabel[status] ?? status}</span>
 
 <style>
-  .status {
-    display: inline-flex; align-items: center; gap: .4rem;
-    font-family: var(--mono); font-size: .75rem; letter-spacing: .04em; text-transform: uppercase;
-    padding: .2rem .55rem; border-radius: 999px;
-    border: 1px solid var(--line); color: var(--muted); background: var(--panel);
-    white-space: nowrap;
-  }
-  .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--muted); }
-  .live .dot { background: var(--copper); box-shadow: 0 0 0 3px color-mix(in srgb, var(--copper) 25%, transparent); }
-  .live { color: var(--copper-ink); }
-  .ok .dot { background: var(--green); }
+  .status { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+  .status::before { content: ''; width: .45rem; height: .45rem; background: var(--muted); }
+  .live { color: var(--copper); }
+  .live::before { background: var(--copper); }
+  .ok { color: var(--accent-ink); }
+  .ok::before { background: var(--accent); }
 </style>

@@ -1,0 +1,33 @@
+---
+// Compact list row: label, title, two-line summary, meta, square thumbnail on the right.
+import Cover from './Cover.astro';
+interface Props {
+  href: string;
+  seed: string;
+  cover?: string;
+  label: string;
+  title: string;
+  summary?: string;
+  coverLabel?: string;
+}
+const { href, seed, cover, label, title, summary, coverLabel } = Astro.props;
+---
+<a class="row" href={href}>
+  <div class="text">
+    <span class="label">{label}</span>
+    <h3 class="title">{title}</h3>
+    {summary && <p>{summary}</p>}
+    <div class="metaline"><slot /></div>
+  </div>
+  <div class="thumb"><Cover seed={seed} image={cover} ratio="1" label={coverLabel} /></div>
+</a>
+
+<style>
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 1rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line); align-items: start; }
+  @media (min-width: 720px) { .row { grid-template-columns: minmax(0, 1fr) 84px; } }
+  .text { display: grid; gap: .35rem; min-width: 0; }
+  .title { font-size: 1rem; }
+  p { margin: 0; font-size: .9rem; line-height: 1.5; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .metaline { display: flex; gap: 1rem; align-items: center; margin-top: .15rem; }
+  .thumb :global(.cover) { width: 100%; }
+</style>

@@ -1,59 +1,86 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import Status from '../components/Status.astro';
-import { url } from '../lib/url';
+import Card from '../components/Card.astro';
+import { url, statusLabel } from '../lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const chapters = await getCollection('chapters');
-const countFor = (id: string) => chapters.filter((c) => c.data.project.id === id).length;
+const chapters = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
+const slug = (id: string) => id.split('/').pop();
+const short = (id: string) => projects.find((p) => p.id === id)?.data.short ?? id;
+const chaptersOf = (id: string) => chapters.filter((c) => c.data.project.id === id);
+const published = chapters.filter((c) => c.data.status === 'published').length;
+
+// One grid: each project's overview card, then its chapters in order.
+const items = projects.flatMap((p) => [
+  {
+    key: p.id, project: p.id, href: url(`projects/${p.id}/`), seed: p.id, cover: p.data.cover,
+    labels: [p.data.short ?? p.data.title, 'Project overview'], title: p.data.title,
+    meta: `${statusLabel[p.data.status]} · ${chaptersOf(p.id).length} chapters`, summary: p.data.tagline, coverLabel: undefined as string | undefined,
+  },
+  ...chaptersOf(p.id).map((c) => ({
+    key: c.id, project: p.id, href: url(`projects/${p.id}/${slug(c.id)}/`), seed: c.id, cover: c.data.cover,
+    labels: [short(p.id), `Chapter ${c.data.order}`], title: c.data.title,
+    meta: statusLabel[c.data.status], summary: c.data.summary, coverLabel: String(c.data.order).padStart(2, '0'),
+  })),
+]);
 ---
 <Base title="Basso Builds">
-  <section class="hero wrap">
-    <p class="eyebrow">Build logs · schematics · video</p>
-    <h1>Hardware projects you can build yourself.</h1>
-    <p class="lede">
-      Every project here is documented end to end: why each part was chosen, the circuit boards,
-      the enclosure, the firmware, and video of every step, so you can follow along and build your own.
-    </p>
-  </section>
-
   <section class="wrap">
+    <header class="head">
+      <h1>All projects</h1>
+      <span class="meta">{projects.length} projects · {chapters.length} chapters · {published} published</span>
+    </header>
+
+    <div class="filter">
+      <span class="filter-title">Narrow by project</span>
+      <div class="chips" role="group" aria-label="Filter by project">
+        <button type="button" class="chip on" data-filter="all" aria-pressed="true">All</button>
+        {projects.map((p) => (
+          <button type="button" class="chip" data-filter={p.id} aria-pressed="false">{p.data.short ?? p.data.title} <span>{chaptersOf(p.id).length + 1}</span></button>
+        ))}
+      </div>
+    </div>
+
     <div class="grid">
-      {projects.map((p) => (
-        <a class="card" href={url(`projects/${p.id}/`)}>
-          <div class="card-top">
-            <Status status={p.data.status} />
-            <span class="mono count">{countFor(p.id)} chapters</span>
-          </div>
-          <h2>{p.data.title}</h2>
-          <p>{p.data.tagline}</p>
-          <ul class="tags">
-            {p.data.tags.map((t) => <li>{t}</li>)}
-          </ul>
-          {p.data.target && <p class="mono target">Target: {p.data.target}</p>}
-        </a>
+      {items.map((it) => (
+        <div class="cell" data-project={it.project}>
+          <Card href={it.href} seed={it.seed} cover={it.cover} labels={it.labels} title={it.title} meta={it.meta} summary={it.summary} coverLabel={it.coverLabel} />
+        </div>
       ))}
     </div>
   </section>
 </Base>
 
+<script>
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const cells = document.querySelectorAll<HTMLElement>('.cell');
+  const apply = (f: string) => {
+    chips.forEach((c) => { const on = c.dataset.filter === f; c.classList.toggle('on', on); c.setAttribute('aria-pressed', String(on)); });
+    cells.forEach((el) => { el.hidden = f !== 'all' && el.dataset.project !== f; });
+  };
+  chips.forEach((c) => c.addEventListener('click', () => {
+    const f = c.dataset.filter ?? 'all';
+    apply(f);
+    try { history.replaceState(null, '', f === 'all' ? location.pathname : `#${f}`); } catch {}
+  }));
+  const start = location.hash.slice(1);
+  if (start && [...chips].some((c) => c.dataset.filter === start)) apply(start);
+</script>
+
 <style>
-  .hero { padding: 4rem 16px 2.5rem; }
-  @media (min-width: 720px) { .hero { padding: 5.5rem 32px 3rem; } }
-  .grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
-  .card {
-    display: flex; flex-direction: column; gap: .25rem;
-    padding: 1.5rem; border-radius: 12px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--text); text-decoration: none;
-    transition: border-color .15s, transform .15s;
-  }
-  .card:hover { border-color: var(--copper); transform: translateY(-2px); color: var(--text); }
-  .card-top { display: flex; justify-content: space-between; align-items: center; }
-  .count { font-size: .8rem; color: var(--muted); }
-  .card h2 { margin: .9rem 0 .25rem; font-family: var(--display); font-size: 1.6rem; }
-  .card p { margin: 0; color: var(--muted); }
-  .tags { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-  .tags li { font-family: var(--mono); font-size: .75rem; padding: .15rem .5rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
-  .target { margin-top: 1rem !important; font-size: .8rem; }
+  .head { padding: 2.75rem 0 1.5rem; display: grid; gap: .6rem; border-bottom: 2px solid var(--ink); }
+  .head h1 { font: 800 clamp(2rem, 4.5vw, 2.6rem)/1.1 var(--sans); letter-spacing: -0.025em; }
+  .filter { padding: 1.2rem 0 1.6rem; }
+  .filter-title { display: block; font: 800 .74rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin-bottom: .8rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .chip { font: 600 .9rem/1 var(--sans); color: var(--text); background: var(--bg); border: 1px solid var(--line); padding: .7rem .85rem; cursor: pointer; }
+  .chip span { font: 500 .72rem/1 var(--mono); color: var(--muted); margin-left: .35rem; }
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .chip.on span { color: var(--bg); opacity: .75; }
+  .grid { display: grid; gap: 2.6rem 1.75rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 980px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .cell[hidden] { display: none; }
 </style>

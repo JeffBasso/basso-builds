@@ -1,4 +1,5 @@
 ---
+import { getCollection } from 'astro:content';
 import { url } from '../lib/url';
 import '../styles/global.css';
 
@@ -6,9 +7,13 @@ interface Props {
   title: string;
   description?: string;
 }
-const { title, description = 'Build logs and how-to videos for my hardware projects.' } = Astro.props;
+const { title, description = 'Build logs, schematics and video for hardware projects you can build yourself.' } = Astro.props;
 const siteName = 'Basso Builds';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Chicago' });
+const github = 'https://github.com/JeffBasso';
+const here = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang="en">
@@ -20,33 +25,104 @@ const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
-    <header class="site-header">
-      <div class="wrap header-row">
-        <a class="brand" href={url('/')}>
-          <span class="brand-mark" aria-hidden="true"></span>{siteName}
+    <div class="topbar">
+      <div class="wrap row">
+        <span class="meta">{today}</span>
+        <a class="meta" href={github} aria-label="GitHub">
+          <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          GitHub
         </a>
-        <nav>
-          <a href={url('/')}>Projects</a>
-          <a href={url('about/')}>About</a>
-        </nav>
+      </div>
+    </div>
+
+    <header class="masthead">
+      <div class="wrap row">
+        <a class="logo" href={url('/')} aria-label={siteName}>
+          <span class="mark" aria-hidden="true"></span>
+          <span class="word"><b>BASSO</b><i>BUILDS</i></span>
+          <span class="tag">Open hardware build logs</span>
+        </a>
       </div>
     </header>
+
+    <nav class="catbar" aria-label="Projects">
+      <div class="wrap row">
+        <div class="links">
+          <a href={url('/')} class:list={{ on: here === url('/') }}>All projects</a>
+          {projects.map((p) => (
+            <a href={url(`projects/${p.id}/`)} class:list={{ on: here.startsWith(url(`projects/${p.id}/`)) }}>{p.data.short ?? p.data.title}</a>
+          ))}
+          <a href={url('about/')} class:list={{ on: here.startsWith(url('about/')) }}>About</a>
+        </div>
+        <a class="cta" href={github}>GitHub <span aria-hidden="true">→</span></a>
+      </div>
+    </nav>
+
     <main>
       <slot />
     </main>
-    <footer class="site-footer">
-      <div class="wrap">
-        <p>Designs, schematics and videos for people who want to build it themselves.</p>
-        <p class="mono">© {new Date().getFullYear()} Jeff Basso</p>
+
+    <footer class="foot">
+      <div class="wrap grid">
+        <div>
+          <span class="word small"><b>BASSO</b><i>BUILDS</i></span>
+          <p>Every project documented end to end, from the first requirement to the final install, with schematics, sources and video, so you can build your own.</p>
+        </div>
+        <div>
+          <h4>Projects</h4>
+          {projects.map((p) => <a href={url(`projects/${p.id}/`)}>{p.data.short ?? p.data.title}</a>)}
+        </div>
+        <div>
+          <h4>Site</h4>
+          <a href={url('about/')}>About</a>
+          <a href={github}>GitHub</a>
+        </div>
       </div>
+      <div class="wrap legal meta">© {new Date().getFullYear()} Jeff Basso</div>
     </footer>
   </body>
 </html>
+
+<style>
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .topbar { background: var(--bar); }
+  .topbar .row { height: 34px; }
+  .topbar .meta { color: #8fa197; display: inline-flex; align-items: center; gap: .45rem; }
+  .topbar a.meta:hover { color: #fff; }
+
+  .masthead { background: var(--bg); border-bottom: 1px solid var(--line); }
+  .masthead .row { height: 76px; }
+  .logo { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+  .mark { flex: none; width: 30px; height: 30px; background: var(--accent); position: relative; }
+  .mark::before { content: ''; position: absolute; inset: 7px; border: 3px solid #fff; }
+  .mark::after { content: ''; position: absolute; left: 12px; top: 12px; width: 6px; height: 6px; background: var(--copper); }
+  .word { font-family: var(--display); font-size: 1.9rem; line-height: 1; letter-spacing: .01em; }
+  .word b { font-weight: 400; color: var(--ink); }
+  .word i { font-style: normal; color: var(--accent); }
+  .word.small { font-size: 1.5rem; }
+  .tag { font: 500 .68rem/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-left: 1px solid var(--line); padding-left: .7rem; }
+  @media (max-width: 560px) { .tag { display: none; } .word { font-size: 1.6rem; } }
+
+  .catbar { background: var(--nav); position: sticky; top: 0; z-index: 10; }
+  .catbar .row { height: 46px; }
+  .links { display: flex; gap: 1.6rem; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  .links::-webkit-scrollbar { display: none; }
+  .links a { color: var(--nav-text); font: 600 .9rem/46px var(--sans); white-space: nowrap; border-bottom: 3px solid transparent; }
+  .links a:hover { color: #fff; }
+  .links a.on { color: #fff; border-bottom-color: var(--accent); }
+  .cta { flex: none; background: var(--accent); color: #fff; font: 800 .74rem/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; padding: .75rem 1rem; }
+  .cta:hover { filter: brightness(1.1); }
+  @media (max-width: 560px) { .cta { display: none; } }
+
+  .foot { background: var(--nav); color: #a7b8af; margin-top: 4.5rem; padding: 2.75rem 0 1.5rem; font-size: .92rem; }
+  .foot .grid { display: grid; gap: 2rem; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .foot .grid { grid-template-columns: 2fr 1fr 1fr; } }
+  .foot p { max-width: 30rem; margin: .8rem 0 0; }
+  .foot .word b { color: #fff; }
+  .foot h4 { color: #fff; font: 700 .72rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .9rem; }
+  .foot .grid a { display: block; padding: .2rem 0; }
+  .foot .grid a:hover { color: #fff; }
+  .legal { border-top: 1px solid rgba(255,255,255,.1); margin-top: 2rem; padding-top: 1.2rem; color: #6f7f77; }
+</style>

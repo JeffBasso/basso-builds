@@ -2,7 +2,10 @@
 title: Project Ion
 tagline: An in-wall, tri-amped smart speaker powered by a single PoE++ Ethernet cable, with the amplifiers, DSP crossover and a room sensor hub built into the wall.
 status: in design
+short: Project Ion
 order: 1
+cover: /images/ion-speaker/cover.jpg
+coverCaption: "Amp board, KiCad 3D view, October 2026: placement in progress."
 started: 2026-09-01
 target: End of 2027
 tags: [PoE++, ESP32-S31, TAS5825M, KiCad, ESPHome, Sendspin, Dayton drivers]

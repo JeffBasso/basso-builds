@@ -23,7 +23,7 @@ const src = video?.youtube
     </div>
   ) : (
     <div class="frame placeholder">
-      <span class="mono">▶ Video coming</span>
+      <span class="meta">▶ Video coming</span>
     </div>
   )}
   {video?.caption && <figcaption>{video.caption}</figcaption>}
@@ -34,7 +34,6 @@ const src = video?.youtube
   .frame {
     position: relative;
     aspect-ratio: 16 / 9;
-    border-radius: 10px;
     overflow: hidden;
     background: var(--ink);
     border: 1px solid var(--line);
