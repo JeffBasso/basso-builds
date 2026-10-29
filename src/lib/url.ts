@@ -11,6 +11,6 @@ export const statusLabel: Record<string, string> = {
   testing: 'Testing',
   done: 'Done',
   planned: 'Coming',
-  draft: 'Draft',
-  published: 'Published',
+  draft: 'In progress',
+  published: 'Written',
 };

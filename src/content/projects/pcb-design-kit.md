@@ -3,6 +3,7 @@ title: The AI PCB Design Kit
 tagline: Turn a Windows PC into an AI-assisted circuit board design station. Claude Code drives KiCad from requirements to a filled-in fab order, and stops at checkout.
 status: building
 short: PCB Design Kit
+kit: true
 order: 2
 cover: /images/pcb-design-kit/cover.jpg
 coverCaption: "Illustration: from schematic to routed copper."
