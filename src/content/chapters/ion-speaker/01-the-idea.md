@@ -53,7 +53,7 @@ work stops at eight gates for approval: requirements, architecture, schematic,
 placement, layout, fab files, the order, and bring-up. The chapters that follow are
 those gates, in order, with what was decided, the numbers behind it and what went
 wrong. The tooling itself is its own project:
-[The AI PCB Design Kit](../../pcb-design-kit/).
+[The AI PCB Design Kit](../../pcb-design-kit/01-what-it-is/).
 
 ## What's in the box
 

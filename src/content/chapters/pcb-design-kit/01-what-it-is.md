@@ -47,5 +47,5 @@ change. The rules are short, and longer procedures load only when needed, as ski
 jobs report progress to a phone. The person keeps the decisions that matter: approving
 gates, approving uploads, picking a Quilter candidate, and paying.
 
-The first real board built with it is [Project Ion](../../ion-speaker/), an in-wall PoE
+The first real board built with it is [Project Ion](../../ion-speaker/01-the-idea/), an in-wall PoE
 speaker amp. A lot of the kit's PoE and audio rules exist because of that board.

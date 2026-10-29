@@ -42,4 +42,4 @@ The first five lines of each board's `STATUS.md` are fixed: title, updated, phas
 gate passed with its date, and next step. The launcher's board list and the phone
 dashboard both read those lines.
 
-The [Project Ion chapters](../../ion-speaker/) follow these gates one by one, on a real board.
+The [Project Ion chapters](../../ion-speaker/01-the-idea/) follow these gates one by one, on a real board.
