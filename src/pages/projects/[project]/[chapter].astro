@@ -45,6 +45,10 @@ const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.sp
 
     <aside>
       <div class="sec side"><h2>In this build</h2></div>
+      <a class="toc overview" href={url(`projects/${project.id}/`)}>
+        <span class="n meta">—</span>
+        <span>Project overview and spec sheet</span>
+      </a>
       {siblings.map((c) => (
         <a class:list={['toc', { on: c.id === chapter.id }]} href={href(c)}>
           <span class="n meta">{String(c.data.order).padStart(2, '0')}</span>
@@ -74,4 +78,5 @@ const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.sp
   .toc:hover { color: var(--accent-ink); }
   .toc.on { color: var(--ink); }
   .toc.on .n { color: var(--accent-ink); }
+  .toc.overview { font-weight: 500; color: var(--muted); }
 </style>

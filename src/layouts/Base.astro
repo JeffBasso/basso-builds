@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { url } from '../lib/url';
+import { projectStart } from '../lib/start';
 import '../styles/global.css';
 
 interface Props {
@@ -11,6 +12,7 @@ const { title, description = 'Build logs, schematics and video for hardware proj
 const siteName = 'Basso Builds';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const start = Object.fromEntries(await Promise.all(projects.map(async (p) => [p.id, await projectStart(p.id)])));
 const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/Chicago' });
 const github = 'https://github.com/JeffBasso';
 const here = Astro.url.pathname;
@@ -52,7 +54,7 @@ const here = Astro.url.pathname;
         <div class="links">
           <a href={url('/')} class:list={{ on: here === url('/') }}>All projects</a>
           {projects.map((p) => (
-            <a href={url(`projects/${p.id}/`)} class:list={{ on: here.startsWith(url(`projects/${p.id}/`)) }}>{p.data.short ?? p.data.title}</a>
+            <a href={start[p.id]} class:list={{ on: here.startsWith(url(`projects/${p.id}/`)) }}>{p.data.short ?? p.data.title}</a>
           ))}
           <a href={url('about/')} class:list={{ on: here.startsWith(url('about/')) }}>About</a>
         </div>
@@ -72,7 +74,7 @@ const here = Astro.url.pathname;
         </div>
         <div>
           <h4>Projects</h4>
-          {projects.map((p) => <a href={url(`projects/${p.id}/`)}>{p.data.short ?? p.data.title}</a>)}
+          {projects.map((p) => <a href={start[p.id]}>{p.data.short ?? p.data.title}</a>)}
         </div>
         <div>
           <h4>Site</h4>
