@@ -1,5 +1,7 @@
 ---
 import { url } from '../lib/url';
+// Changes on every build, so a replaced image (same file name) is never served from cache.
+const build = (import.meta.env.BUILD_ID ?? Date.now().toString(36));
 // Generated circuit-board cover art, stable per seed, so cards look finished
 // before there are photos. Pass `image` to use a real picture instead.
 interface Props {
@@ -42,7 +44,7 @@ const hue = Math.floor(rnd() * 3); // three board tints
 const boards = ['#0f3b27', '#123326', '#0d2f2a'];
 ---
 {image ? (
-  <img class="cover" src={image.startsWith('/') ? url(image) : image} alt={alt} loading="lazy" style={`aspect-ratio:${ratio}`} />
+  <img class="cover" src={image.startsWith('/') ? `${url(image)}?v=${build}` : image} alt={alt} loading="lazy" style={`aspect-ratio:${ratio}`} />
 ) : (
   <svg class="cover" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label={alt} style={`aspect-ratio:${ratio}`}>
     <rect width={W} height={H} fill={boards[hue]} />
