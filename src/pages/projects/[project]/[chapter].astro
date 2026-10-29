@@ -1,0 +1,58 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Status from '../../../components/Status.astro';
+import Video from '../../../components/Video.astro';
+import { url } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  const chapters = await getCollection('chapters');
+  return chapters.map((c) => ({
+    params: { project: c.data.project.id, chapter: c.id.split('/').pop() },
+    props: { chapter: c },
+  }));
+}
+
+const { chapter } = Astro.props;
+const project = await getEntry(chapter.data.project);
+const { Content } = await render(chapter);
+const siblings = (await getCollection('chapters'))
+  .filter((c) => c.data.project.id === chapter.data.project.id)
+  .sort((a, b) => a.data.order - b.data.order);
+const i = siblings.findIndex((c) => c.id === chapter.id);
+const prev = siblings[i - 1];
+const next = siblings[i + 1];
+const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.split('/').pop()}/`);
+---
+<Base title={`${chapter.data.title} · ${project!.data.title}`} description={chapter.data.summary}>
+  <article class="wrap narrow">
+    <header class="head">
+      <p class="eyebrow">
+        <a href={url('/')}>Projects</a> / <a href={url(`projects/${project!.id}/`)}>{project!.data.title}</a> /
+        Chapter {chapter.data.order}
+      </p>
+      <h1>{chapter.data.title}</h1>
+      <p class="lede">{chapter.data.summary}</p>
+      <div class="meta"><Status status={chapter.data.status} /></div>
+    </header>
+
+    <Video video={chapter.data.video} title={chapter.data.title} />
+    <div class="prose"><Content /></div>
+
+    <nav class="pager">
+      {prev ? <a href={href(prev)}><span class="mono">← Previous</span>{prev.data.title}</a> : <span></span>}
+      {next ? <a class="next" href={href(next)}><span class="mono">Next →</span>{next.data.title}</a> : <span></span>}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .head { padding: 3rem 0 2rem; }
+  .eyebrow a { color: var(--muted); }
+  .meta { margin-top: 1.25rem; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  .pager a { display: grid; gap: .2rem; color: var(--text); text-decoration: none; padding: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .pager a:hover { border-color: var(--copper); }
+  .pager .mono { font-size: .75rem; color: var(--muted); }
+  .pager .next { text-align: right; }
+</style>

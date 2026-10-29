@@ -1,0 +1,93 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import Status from '../../../components/Status.astro';
+import Video from '../../../components/Video.astro';
+import { url } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((p) => ({ params: { project: p.id }, props: { project: p } }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const chapters = (await getCollection('chapters'))
+  .filter((c) => c.data.project.id === project.id)
+  .sort((a, b) => a.data.order - b.data.order);
+const slug = (id: string) => id.split('/').pop();
+---
+<Base title={project.data.title} description={project.data.tagline}>
+  <article class="wrap">
+    <header class="head">
+      <p class="eyebrow"><a href={url('/')}>Projects</a> /</p>
+      <h1>{project.data.title}</h1>
+      <p class="lede">{project.data.tagline}</p>
+      <div class="meta">
+        <Status status={project.data.status} />
+        {project.data.target && <span class="mono">Target: {project.data.target}</span>}
+        {project.data.repo && <a class="mono" href={project.data.repo}>Source on GitHub →</a>}
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="main">
+        <Video video={project.data.video} title={project.data.title} />
+        <div class="prose"><Content /></div>
+      </div>
+
+      <aside>
+        {project.data.stats.length > 0 && (
+          <dl class="stats">
+            {project.data.stats.map((s) => (
+              <div><dt>{s.label}</dt><dd>{s.value}</dd></div>
+            ))}
+          </dl>
+        )}
+      </aside>
+    </div>
+
+    <h2 id="chapters">Build chapters</h2>
+    <ol class="chapters">
+      {chapters.map((c) => (
+        <li>
+          <a href={url(`projects/${project.id}/${slug(c.id)}/`)}>
+            <span class="num mono">{String(c.data.order).padStart(2, '0')}</span>
+            <span class="body">
+              <strong>{c.data.title}</strong>
+              <span class="sum">{c.data.summary}</span>
+            </span>
+            <Status status={c.data.status} />
+          </a>
+        </li>
+      ))}
+    </ol>
+  </article>
+</Base>
+
+<style>
+  .head { padding: 3rem 0 2rem; }
+  .eyebrow a { color: var(--muted); }
+  .meta { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: 1.25rem; font-size: .85rem; color: var(--muted); }
+  .layout { display: grid; gap: 2rem; }
+  @media (min-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr) 260px; } }
+  .stats { margin: 0; display: grid; gap: .75rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  @media (min-width: 900px) { .stats { position: sticky; top: 1.5rem; } }
+  .stats div { display: grid; gap: .1rem; }
+  .stats dt { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .stats dd { margin: 0; font-weight: 500; }
+  .chapters { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .chapters a {
+    display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: 1rem; align-items: center;
+    padding: 1rem .25rem; border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none;
+  }
+  .chapters a:hover { background: var(--panel); }
+  .chapters a:hover strong { color: var(--copper-ink); }
+  .num { color: var(--copper); font-size: .9rem; }
+  .body { display: grid; gap: .15rem; }
+  .sum { color: var(--muted); font-size: .95rem; }
+  @media (max-width: 560px) {
+    .chapters a { grid-template-columns: 2rem minmax(0, 1fr); }
+    .chapters a :global(.status) { grid-column: 2; justify-self: start; }
+  }
+</style>

@@ -1,0 +1,17 @@
+{
+  "name": "basso-builds",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "astro": "^7.4.4"
+  },
+  "private": true,
+  "type": "module"
+}
