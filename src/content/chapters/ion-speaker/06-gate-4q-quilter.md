@@ -3,15 +3,15 @@ project: ion-speaker
 title: "AI layout with Quilter: what it can and can't be trusted with"
 order: 6
 gate: "Gate 4Q"
-date: 2026-10-28
-summary: "Quilter's first run came back overnight with six candidates at 90-91 % routed, and 14 parts on the wrong side of the isolation barrier. For run 2, everything safety-related was placed and routed by hand first."
+date: 2026-10-29
+summary: "Run 1 put 14 parts on the wrong side of the isolation barrier. Run 2, with the PoE island done by hand, still went wrong: a capped DRC list hid nine open connections, and Quilter put about 125 parts on the bottom. Run 3 enforces both with keep-outs."
 status: draft
 ---
 
 Boards with 101 to 999 parts go to **Quilter**, an AI placement-and-routing service, after
 the critical parts are placed and locked by hand. Gate 4Q is reviewing what comes back
 and deciding whether any candidate is good enough to carry forward. This one is
-**in progress**: run 1 is done and rejected, and run 2 is running.
+**in progress**: runs 1 and 2 are done and rejected, and run 3 is running.
 
 ## Run 1
 
@@ -100,3 +100,61 @@ Each run 2 candidate gets the same checks:
 - RGMII skew checked by hand.
 
 Then comes a review with renders of the top two, and the Gate 4Q decision.
+
+## Update, Oct 29: run 2 came back, and so did our own mistake
+
+Run 2 finished overnight: first candidate after 3 hours 11 minutes, all six done
+by 01:42. Each one was 93-94 % routed. The good part held up: on all six, the 127 locked
+parts hadn't moved, the 965 locked tracks and vias were intact, no copper crossed the
+moat, and the inner planes were kept.
+
+| Candidates | What went wrong |
+|---|---|
+| 1.1-3.1 | 14-18 secondary-side parts inside the PoE island: the TL431 and optocoupler feedback network for the isolated converter, placed by proximity again |
+| 4.1-6.1 | About 125 parts on the bottom side, 27-29 of them not chip passives (SMB TVS diodes, 7343 polymer capacitors, SOT-89 and PowerDI3333 transistors, ESD arrays) |
+| All six | 113-162 tracks and vias plus PoE-return pours added on island nets at 0.15 mm, breaking the 0.6 mm rule for the 57 V nets |
+
+### What went wrong: a truncated list
+
+The last one was our fault. The island was supposed to be finished, and the count
+said "0 open". But `kicad-cli` caps its DRC report at 499 unconnected items, and the
+board had 622. **Nine open connections at the PoE controller (TPS2373-4) were hidden
+past the cap**, so Quilter routed them itself, with its default clearance.
+
+Two lessons came out of it:
+
+1. **Never trust a capped list.** The open count now comes from KiCad's own connectivity,
+   through a script that first removes the parts waiting for Quilter, so the island
+   list is short enough to read in full.
+2. **"Prefer single-sided" is a preference, not a rule.** The board's bottom side is
+   limited to 2 mm, chip passives only, so that limit is now a keep-out in the file.
+
+**Decision:** no pick. Candidate 6.1 was the closest (barrier clean, best routed), but it
+would have meant bringing about 28 parts back to the top and routing them again by hand.
+Fixing the input and running again was cheaper.
+
+## Run 3
+
+Before run 3:
+
+- **The island was finished properly.** The class-set resistor moved next to the
+  controller's pins, following the TPS2373-4 layout guidance, and the detection, class,
+  return and supply connections were routed by hand. With the full, uncapped count, the
+  island has **0 open connections**, and the whole board has **0 DRC errors**.
+- **Two new keep-outs:** no footprints anywhere on the bottom layer, and no new footprints
+  inside the island.
+- 127 parts and 1,080 tracks and vias are locked. Quilter gets 206 parts and 613
+  connections, all on the secondary side.
+
+Run 3 went in on October 29 at 11:41 with the same settings as run 2. One question is
+still open for Gate 5: the hand routing left 11 vias inside SMD pads. Those either
+have to move, or the order has to call for filled and capped vias.
+
+We also gave the large parts real 3D models while run 3 runs (the transformers,
+inductors, heatsinks, diodes and the converter IC), sized from their datasheet drawings.
+That way the renders, and later the enclosure fit check, show true heights.
+
+## Files
+
+The board repo holds the submission notes and a candidate review for each run, plus the
+scripts that check the barrier sides, the bottom-side parts and the island's open connections.
