@@ -3,8 +3,9 @@ import { getCollection, getEntry, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Status from '../../../components/Status.astro';
 import Video from '../../../components/Video.astro';
-import Row from '../../../components/Row.astro';
+import Cover from '../../../components/Cover.astro';
 import { url } from '../../../lib/url';
+import { projectStart } from '../../../lib/start';
 
 export async function getStaticPaths() {
   const chapters = await getCollection('chapters');
@@ -17,19 +18,43 @@ export async function getStaticPaths() {
 const { chapter } = Astro.props;
 const project = (await getEntry(chapter.data.project))!;
 const { Content } = await render(chapter);
+const { Content: Overview } = await render(project);
+const start = await projectStart(project.id);
 const siblings = (await getCollection('chapters'))
   .filter((c) => c.data.project.id === chapter.data.project.id)
   .sort((a, b) => a.data.order - b.data.order);
 const i = siblings.findIndex((c) => c.id === chapter.id);
 const prev = siblings[i - 1];
 const next = siblings[i + 1];
+const first = i === 0;
+const done = siblings.filter((c) => c.data.status === 'published').length;
 const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.split('/').pop()}/`);
 ---
 <Base title={`${chapter.data.title} · ${project.data.title}`} description={chapter.data.summary}>
   <div class="wrap layout">
     <article class="main">
-      <header class="head">
-        <span class="label"><a href={url(`projects/${project.id}/`)}>{project.data.short ?? project.data.title}</a> · Chapter {chapter.data.order} of {siblings.length}{chapter.data.gate && <> · {chapter.data.gate}</>}</span>
+      {first && (
+        <section class="project">
+          <span class="label">{project.data.tags.slice(0, 3).join(' · ')}</span>
+          <p class="ptitle display">{project.data.title}</p>
+          <p class="tagline">{project.data.tagline}</p>
+          <div class="metaline">
+            <Status status={project.data.status} />
+            <span class="meta">{done} of {siblings.length} chapters written</span>
+            {project.data.target && <span class="meta">Target {project.data.target}</span>}
+            {project.data.repo && <a class="meta link" href={project.data.repo}>Source on GitHub →</a>}
+          </div>
+          {project.data.cover && (
+            <figure class="hero-img">
+              <Cover seed={project.id} image={project.data.cover} alt={project.data.coverCaption ?? project.data.title} ratio="16 / 9" />
+              {project.data.coverCaption && <figcaption class="meta">{project.data.coverCaption}</figcaption>}
+            </figure>
+          )}
+          <div class="prose overview"><Overview /></div>
+        </section>
+      )}
+      <header class:list={['head', { after: first }]}>
+        <span class="label"><a href={start}>{project.data.short ?? project.data.title}</a> · Chapter {chapter.data.order} of {siblings.length}{chapter.data.gate && <> · {chapter.data.gate}</>}</span>
         <h1 class="display">{chapter.data.title}</h1>
         <p class="summary">{chapter.data.summary}</p>
         <div class="metaline"><Status status={chapter.data.status} />{chapter.data.date && <span class="meta">{chapter.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</span>}</div>
@@ -45,16 +70,20 @@ const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.sp
 
     <aside>
       <div class="sec side"><h2>In this build</h2></div>
-      <a class="toc overview" href={url(`projects/${project.id}/`)}>
-        <span class="n meta">—</span>
-        <span>Project overview and spec sheet</span>
-      </a>
       {siblings.map((c) => (
         <a class:list={['toc', { on: c.id === chapter.id }]} href={href(c)}>
           <span class="n meta">{String(c.data.order).padStart(2, '0')}</span>
           <span>{c.data.title}</span>
         </a>
       ))}
+      {project.data.stats.length > 0 && (
+        <div class="spec">
+          <div class="spec-head">Spec sheet</div>
+          <dl>
+            {project.data.stats.map((s) => (<div><dt class="meta">{s.label}</dt><dd>{s.value}</dd></div>))}
+          </dl>
+        </div>
+      )}
     </aside>
   </div>
 </Base>
@@ -73,10 +102,23 @@ const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.sp
   .pager .title { font-size: 1rem; }
   .side { margin-top: 0; }
   .side h2 { font-size: 1.05rem; }
-  @media (min-width: 900px) { aside { position: sticky; top: 64px; align-self: start; } }
+  @media (min-width: 900px) { aside { position: sticky; top: 64px; align-self: start; max-height: calc(100vh - 80px); overflow-y: auto; } }
   .toc { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: .5rem; padding: .55rem 0; border-bottom: 1px solid var(--line); font-size: .9rem; font-weight: 600; color: var(--text); line-height: 1.35; }
   .toc:hover { color: var(--accent-ink); }
   .toc.on { color: var(--ink); }
   .toc.on .n { color: var(--accent-ink); }
-  .toc.overview { font-weight: 500; color: var(--muted); }
+  .metaline { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: center; }
+  .project { display: grid; gap: .8rem; padding-bottom: 2rem; margin-bottom: 2.25rem; border-bottom: 4px solid var(--accent); }
+  .ptitle { margin: 0; font-size: clamp(2.8rem, 7vw, 4.6rem); line-height: 1; color: var(--ink); }
+  .tagline { margin: 0; font-size: 1.15rem; line-height: 1.55; }
+  .link { color: var(--accent-ink); }
+  .hero-img { margin: .6rem 0 .4rem; border: 1px solid var(--line); }
+  .hero-img figcaption { padding: .6rem .8rem; border-top: 1px solid var(--line); }
+  .head.after h1 { font-size: clamp(2rem, 5vw, 3rem); }
+  .spec { margin-top: 1.75rem; border-top: 4px solid var(--accent); background: var(--panel); }
+  .spec-head { font: 800 .78rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); padding: .9rem 1rem .4rem; }
+  .spec dl { margin: 0; }
+  .spec dl div { padding: .6rem 1rem; border-bottom: 1px solid var(--line); display: grid; gap: .15rem; }
+  .spec dl div:last-child { border-bottom: 0; }
+  .spec dd { margin: 0; color: var(--ink); font-weight: 600; font-size: .9rem; line-height: 1.4; }
 </style>
