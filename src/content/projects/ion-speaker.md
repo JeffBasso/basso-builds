@@ -2,6 +2,7 @@
 title: Project Ion
 tagline: An in-wall, tri-amped smart speaker powered by a single PoE++ Ethernet cable, with the amplifiers, DSP crossover and a room sensor hub built into the wall.
 status: in design
+short: Project Ion
 order: 1
 started: 2026-09-01
 target: End of 2027

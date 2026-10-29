@@ -1,59 +1,94 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Cover from '../components/Cover.astro';
+import Card from '../components/Card.astro';
+import Row from '../components/Row.astro';
 import Status from '../components/Status.astro';
-import { url } from '../lib/url';
+import { url, statusLabel } from '../lib/url';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const chapters = await getCollection('chapters');
-const countFor = (id: string) => chapters.filter((c) => c.data.project.id === id).length;
+const chapters = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
+const [lead, ...others] = projects;
+const slug = (id: string) => id.split('/').pop();
+const chapterHref = (c: (typeof chapters)[number]) => url(`projects/${c.data.project.id}/${slug(c.id)}/`);
+const short = (id: string) => projects.find((p) => p.id === id)?.data.short ?? id;
+const chaptersOf = (id: string) => chapters.filter((c) => c.data.project.id === id);
+const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+// "Up next": the first not-yet-published chapters of each project, interleaved.
+const queues = projects.map((p) => chaptersOf(p.id).filter((c) => c.data.status !== 'published'));
+const upNext: typeof chapters = [];
+for (let i = 0; upNext.length < 4 && i < 20; i++) for (const q of queues) if (q[i] && upNext.length < 4) upNext.push(q[i]);
 ---
 <Base title="Basso Builds">
-  <section class="hero wrap">
-    <p class="eyebrow">Build logs · schematics · video</p>
-    <h1>Hardware projects you can build yourself.</h1>
-    <p class="lede">
-      Every project here is documented end to end: why each part was chosen, the circuit boards,
-      the enclosure, the firmware, and video of every step, so you can follow along and build your own.
-    </p>
-  </section>
-
-  <section class="wrap">
-    <div class="grid">
-      {projects.map((p) => (
-        <a class="card" href={url(`projects/${p.id}/`)}>
-          <div class="card-top">
-            <Status status={p.data.status} />
-            <span class="mono count">{countFor(p.id)} chapters</span>
+  <div class="wrap">
+    <section class="lead">
+      <a class="lead-main" href={url(`projects/${lead.id}/`)}>
+        <Cover seed={lead.id} image={lead.data.cover} ratio="16 / 9" alt="" />
+        <div class="lead-text">
+          <span class="label">{lead.data.tags.slice(0, 2).join(' · ')}</span>
+          <h1 class="display">{lead.data.title}</h1>
+          <p>{lead.data.tagline}</p>
+          <div class="lead-meta">
+            <Status status={lead.data.status} />
+            <span class="meta">{chaptersOf(lead.id).length} chapters</span>
+            {lead.data.target && <span class="meta">Target {lead.data.target}</span>}
           </div>
-          <h2>{p.data.title}</h2>
-          <p>{p.data.tagline}</p>
-          <ul class="tags">
-            {p.data.tags.map((t) => <li>{t}</li>)}
-          </ul>
-          {p.data.target && <p class="mono target">Target: {p.data.target}</p>}
-        </a>
+        </div>
+      </a>
+
+      <aside class="lead-side">
+        {others.map((p) => (
+          <Card href={url(`projects/${p.id}/`)} seed={p.id} cover={p.data.cover} label={statusLabel[p.data.status]} title={p.data.title} summary={p.data.tagline} meta={`${chaptersOf(p.id).length} chapters`} />
+        ))}
+        <div class="about">
+          <span class="label">About this site</span>
+          <p>Hardware projects documented end to end: why each part was chosen, every board, the enclosure and the firmware, with video of each step.</p>
+          <a class="more" href={url('about/')}>Read more →</a>
+        </div>
+      </aside>
+    </section>
+
+    <div class="sec"><h2>Up next</h2><span class="meta">Chapters in progress</span></div>
+    <section class="grid4">
+      {upNext.map((c) => (
+        <Card size="sm" href={chapterHref(c)} seed={c.id} cover={c.data.cover} coverLabel={String(c.data.order).padStart(2, '0')} label={short(c.data.project.id)} title={c.data.title} meta={statusLabel[c.data.status]} />
       ))}
-    </div>
-  </section>
+    </section>
+
+    {projects.map((p) => (
+      <>
+        <div class="sec"><h2>{p.data.short ?? p.data.title}: build chapters</h2><a class="more" href={url(`projects/${p.id}/`)}>View project →</a></div>
+        <section class="list2">
+          {chaptersOf(p.id).map((c) => (
+            <Row href={chapterHref(c)} seed={c.id} cover={c.data.cover} label={`Chapter ${c.data.order}`} title={c.data.title} summary={c.data.summary}>
+              <Status status={c.data.status} />
+            </Row>
+          ))}
+        </section>
+      </>
+    ))}
+  </div>
 </Base>
 
 <style>
-  .hero { padding: 4rem 16px 2.5rem; }
-  @media (min-width: 720px) { .hero { padding: 5.5rem 32px 3rem; } }
-  .grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
-  .card {
-    display: flex; flex-direction: column; gap: .25rem;
-    padding: 1.5rem; border-radius: 12px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--text); text-decoration: none;
-    transition: border-color .15s, transform .15s;
-  }
-  .card:hover { border-color: var(--copper); transform: translateY(-2px); color: var(--text); }
-  .card-top { display: flex; justify-content: space-between; align-items: center; }
-  .count { font-size: .8rem; color: var(--muted); }
-  .card h2 { margin: .9rem 0 .25rem; font-family: var(--display); font-size: 1.6rem; }
-  .card p { margin: 0; color: var(--muted); }
-  .tags { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-  .tags li { font-family: var(--mono); font-size: .75rem; padding: .15rem .5rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
-  .target { margin-top: 1rem !important; font-size: .8rem; }
+  .lead { display: grid; gap: 2rem; padding-top: 1.75rem; }
+  @media (min-width: 900px) { .lead { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 2.25rem; } }
+  .lead-main { display: block; min-width: 0; }
+  .lead-text { padding-top: 1.1rem; display: grid; gap: .7rem; }
+  .lead h1 { font-size: clamp(2.6rem, 6.5vw, 4.2rem); }
+  .lead-main:hover h1 { color: var(--accent-ink); }
+  .lead-text p { margin: 0; font-size: 1.12rem; line-height: 1.55; max-width: 40rem; }
+  .lead-meta { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; }
+  .lead-side { display: grid; gap: 1.75rem; align-content: start; }
+  .about { background: var(--tint); padding: 1.1rem 1.2rem; display: grid; gap: .5rem; }
+  .about p { margin: 0; font-size: .92rem; line-height: 1.55; }
+  .about .more { font: 700 .72rem/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+
+  .grid4 { display: grid; gap: 1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 900px) { .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  .list2 { display: grid; column-gap: 2.5rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 820px) { .list2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

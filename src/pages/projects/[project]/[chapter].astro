@@ -3,6 +3,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import Status from '../../../components/Status.astro';
 import Video from '../../../components/Video.astro';
+import Row from '../../../components/Row.astro';
 import { url } from '../../../lib/url';
 
 export async function getStaticPaths() {
@@ -14,7 +15,7 @@ export async function getStaticPaths() {
 }
 
 const { chapter } = Astro.props;
-const project = await getEntry(chapter.data.project);
+const project = (await getEntry(chapter.data.project))!;
 const { Content } = await render(chapter);
 const siblings = (await getCollection('chapters'))
   .filter((c) => c.data.project.id === chapter.data.project.id)
@@ -24,35 +25,53 @@ const prev = siblings[i - 1];
 const next = siblings[i + 1];
 const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.split('/').pop()}/`);
 ---
-<Base title={`${chapter.data.title} · ${project!.data.title}`} description={chapter.data.summary}>
-  <article class="wrap narrow">
-    <header class="head">
-      <p class="eyebrow">
-        <a href={url('/')}>Projects</a> / <a href={url(`projects/${project!.id}/`)}>{project!.data.title}</a> /
-        Chapter {chapter.data.order}
-      </p>
-      <h1>{chapter.data.title}</h1>
-      <p class="lede">{chapter.data.summary}</p>
-      <div class="meta"><Status status={chapter.data.status} /></div>
-    </header>
+<Base title={`${chapter.data.title} · ${project.data.title}`} description={chapter.data.summary}>
+  <div class="wrap layout">
+    <article class="main">
+      <header class="head">
+        <span class="label"><a href={url(`projects/${project.id}/`)}>{project.data.short ?? project.data.title}</a> · Chapter {chapter.data.order} of {siblings.length}</span>
+        <h1 class="display">{chapter.data.title}</h1>
+        <p class="summary">{chapter.data.summary}</p>
+        <div class="metaline"><Status status={chapter.data.status} /></div>
+      </header>
+      <Video video={chapter.data.video} title={chapter.data.title} />
+      <div class="prose"><Content /></div>
 
-    <Video video={chapter.data.video} title={chapter.data.title} />
-    <div class="prose"><Content /></div>
+      <nav class="pager">
+        {prev ? <a href={href(prev)}><span class="meta">← Previous</span><span class="title">{prev.data.title}</span></a> : <span></span>}
+        {next ? <a class="next" href={href(next)}><span class="meta">Next →</span><span class="title">{next.data.title}</span></a> : <span></span>}
+      </nav>
+    </article>
 
-    <nav class="pager">
-      {prev ? <a href={href(prev)}><span class="mono">← Previous</span>{prev.data.title}</a> : <span></span>}
-      {next ? <a class="next" href={href(next)}><span class="mono">Next →</span>{next.data.title}</a> : <span></span>}
-    </nav>
-  </article>
+    <aside>
+      <div class="sec side"><h2>In this build</h2></div>
+      {siblings.map((c) => (
+        <a class:list={['toc', { on: c.id === chapter.id }]} href={href(c)}>
+          <span class="n meta">{String(c.data.order).padStart(2, '0')}</span>
+          <span>{c.data.title}</span>
+        </a>
+      ))}
+    </aside>
+  </div>
 </Base>
 
 <style>
-  .head { padding: 3rem 0 2rem; }
-  .eyebrow a { color: var(--muted); }
-  .meta { margin-top: 1.25rem; }
-  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
-  .pager a { display: grid; gap: .2rem; color: var(--text); text-decoration: none; padding: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
-  .pager a:hover { border-color: var(--copper); }
-  .pager .mono { font-size: .75rem; color: var(--muted); }
+  .layout { display: grid; gap: 2.5rem; padding-top: 2.25rem; }
+  @media (min-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr) 280px; } }
+  .main { min-width: 0; }
+  .head { display: grid; gap: .8rem; margin-bottom: 1.75rem; }
+  .head .label a:hover { text-decoration: underline; }
+  .head h1 { font-size: clamp(2.4rem, 6vw, 3.8rem); }
+  .summary { margin: 0; font-size: 1.15rem; line-height: 1.55; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; border-top: 4px solid var(--accent); padding-top: 1.25rem; }
+  .pager a { display: grid; gap: .35rem; }
   .pager .next { text-align: right; }
+  .pager .title { font-size: 1rem; }
+  .side { margin-top: 0; }
+  .side h2 { font-size: 1.05rem; }
+  @media (min-width: 900px) { aside { position: sticky; top: 64px; align-self: start; } }
+  .toc { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: .5rem; padding: .55rem 0; border-bottom: 1px solid var(--line); font-size: .9rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+  .toc:hover { color: var(--accent-ink); }
+  .toc.on { color: var(--ink); }
+  .toc.on .n { color: var(--accent-ink); }
 </style>

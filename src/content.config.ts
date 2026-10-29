@@ -23,6 +23,8 @@ const projects = defineCollection({
     target: z.string().optional(),
     tags: z.array(z.string()).default([]),
     repo: z.string().url().optional(),
+    cover: z.string().optional(),   // /images/... ; generated art when absent
+    short: z.string().optional(),   // short name for the nav and labels
     video,
     stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
   }),
@@ -36,6 +38,7 @@ const chapters = defineCollection({
     order: z.number(),
     summary: z.string(),
     status: z.enum(['planned', 'draft', 'published']).default('planned'),
+    cover: z.string().optional(),
     video,
   }),
 });

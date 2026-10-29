@@ -1,0 +1,37 @@
+---
+// Story card: image on top, label, heavy title, optional summary, meta line.
+import Cover from './Cover.astro';
+interface Props {
+  href: string;
+  seed: string;
+  cover?: string;
+  label: string;
+  title: string;
+  summary?: string;
+  meta?: string;
+  coverLabel?: string;
+  size?: 'lg' | 'md' | 'sm';
+}
+const { href, seed, cover, label, title, summary, meta, coverLabel, size = 'md' } = Astro.props;
+---
+<a class={`card ${size}`} href={href}>
+  <Cover seed={seed} image={cover} alt="" label={coverLabel} />
+  <div class="body">
+    <span class="label">{label}</span>
+    <h3 class="title">{title}</h3>
+    {summary && <p>{summary}</p>}
+    {meta && <span class="meta">{meta}</span>}
+    <slot />
+  </div>
+</a>
+
+<style>
+  .card { display: block; min-width: 0; }
+  .body { padding-top: .85rem; display: grid; gap: .45rem; }
+  .title { font-size: 1.12rem; }
+  .lg .title { font-size: 1.4rem; }
+  .sm .title { font-size: .98rem; }
+  p { margin: 0; font-size: .95rem; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sm p { display: none; }
+  .card:hover :global(.cover) { filter: brightness(1.08); }
+</style>
