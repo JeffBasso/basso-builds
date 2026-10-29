@@ -29,10 +29,10 @@ const href = (c: typeof chapter) => url(`projects/${c.data.project.id}/${c.id.sp
   <div class="wrap layout">
     <article class="main">
       <header class="head">
-        <span class="label"><a href={url(`projects/${project.id}/`)}>{project.data.short ?? project.data.title}</a> · Chapter {chapter.data.order} of {siblings.length}</span>
+        <span class="label"><a href={url(`projects/${project.id}/`)}>{project.data.short ?? project.data.title}</a> · Chapter {chapter.data.order} of {siblings.length}{chapter.data.gate && <> · {chapter.data.gate}</>}</span>
         <h1 class="display">{chapter.data.title}</h1>
         <p class="summary">{chapter.data.summary}</p>
-        <div class="metaline"><Status status={chapter.data.status} /></div>
+        <div class="metaline"><Status status={chapter.data.status} />{chapter.data.date && <span class="meta">{chapter.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</span>}</div>
       </header>
       <Video video={chapter.data.video} title={chapter.data.title} />
       <div class="prose"><Content /></div>

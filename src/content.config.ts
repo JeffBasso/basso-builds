@@ -39,6 +39,8 @@ const chapters = defineCollection({
     order: z.number(),
     summary: z.string(),
     status: z.enum(['planned', 'draft', 'published']).default('planned'),
+    gate: z.string().optional(),     // e.g. "Gate 3", "Gate 4Q"
+    date: z.coerce.date().optional(), // when that stage was done
     cover: z.string().optional(),
     video,
   }),

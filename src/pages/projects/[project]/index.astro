@@ -64,7 +64,7 @@ const done = chapters.filter((c) => c.data.status === 'published').length;
     <div class="sec" id="chapters"><h2>Build chapters</h2><span class="meta">{chapters.length} in order</span></div>
     <section class="grid3">
       {chapters.map((c) => (
-        <Card href={url(`projects/${project.id}/${slug(c.id)}/`)} seed={c.id} cover={c.data.cover} coverLabel={String(c.data.order).padStart(2, '0')} labels={[project.data.short ?? project.data.title, `Chapter ${c.data.order}`]} title={c.data.title} meta={statusLabel[c.data.status]} summary={c.data.summary} />
+        <Card href={url(`projects/${project.id}/${slug(c.id)}/`)} seed={c.id} cover={c.data.cover} coverLabel={String(c.data.order).padStart(2, '0')} labels={[`Chapter ${c.data.order}`, ...(c.data.gate ? [c.data.gate] : [])]} title={c.data.title} meta={[statusLabel[c.data.status], c.data.date && c.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })].filter(Boolean).join(' · ')} summary={c.data.summary} />
       ))}
     </section>
   </article>
