@@ -1,0 +1,38 @@
+name: Check
+
+# Runs on every pull request: the site must build before it can be merged.
+# Deploying only happens from main (deploy.yml), after the merge.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build with the GitHub Pages base path
+        env:
+          SITE: https://${{ github.repository_owner }}.github.io
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+      - name: No video files in the repo
+        run: |
+          big=$(git ls-files -z | xargs -0 -I{} find {} -maxdepth 0 -size +20M -print)
+          vids=$(git ls-files | grep -Ei '\.(mp4|mov|mkv|avi|webm)$' || true)
+          if [ -n "$big$vids" ]; then echo "Large or video files found (host video elsewhere and embed it):"; echo "$big$vids"; exit 1; fi
+      - name: Upload the built site for preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: dist
+          retention-days: 7

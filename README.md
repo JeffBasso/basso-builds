@@ -36,6 +36,16 @@ video:
 
 Small images go in `public/images/<project>/` and are referenced as `/images/<project>/name.jpg`.
 
+## How changes get published
+
+`main` is protected: every change goes through a pull request.
+
+1. Changes are made on a branch and opened as a pull request.
+2. **Check** (`.github/workflows/check.yml`) builds the site and rejects video or
+   oversized files. A PR can't be merged until it passes. The built site is attached
+   to the run as `site-preview` if you want to look before merging.
+3. Merging deploys the site (`deploy.yml`), live in about a minute.
+
 ## First-time GitHub setup
 
 1. Create a **public** repo (GitHub Pages on a free plan needs a public repo) and push this folder to `main`.
