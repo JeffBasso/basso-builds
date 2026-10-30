@@ -47,4 +47,41 @@ Snapshots are used only for aiming, never saved or uploaded. The camera's own re
 is denied, because it would fight OBS for the device; everything records through OBS.
 Streaming is denied outright.
 
-*The camera support is in review and not merged yet.*
+## Update, Oct 29: one scene per app, an edit list, and a teleprompter
+
+The first full day of filming changed a few things.
+
+**One scene per app instead of per monitor.** The **PCB Design** collection now has a
+window capture for each app: the launcher, KiCad, the Claude Code terminal and the
+browser. Each capture follows its window wherever it is on screen. There's also a
+full-frame **Me** scene for the camera and the **Paused** card. The camera support
+described above is merged.
+
+**From footage to an edit list.** The marker log is now the input to an edit-list
+script. It reads the log, the OBS files (named by start time) and the board's commits,
+and works out where each gate, milestone and commit falls inside each file. Paused time
+is taken out, because OBS stops a file's clock while it's paused. Say "rough cut" and
+Claude lists the files, asks before uploading anything to Descript, and has Descript's
+AI editor cut to the list. It never publishes; you finish the edit.
+
+**A recordings window in the launcher.** It lists every recording across boards with its
+length, size and markers, plays one, shows how much disk space is left, and starts or
+closes OBS. It won't close OBS while it's recording.
+
+**Shot list and teleprompter.** Each board keeps a list of the shots its chapters need:
+spoken pieces (an intro, a recap per gate) with a full script and talking points, and
+silent shots to film on the bench. The launcher shows the scripts on a teleprompter,
+and each take is marked in the log so the edit list can file it under its chapter.
+
+**Voice dictation.** Hold Space in Claude Code and talk, and your words are typed into
+the prompt. While OBS is recording, that's captured as narration too, so pause first
+before saying anything private.
+
+**What went wrong: the recording didn't start.** The rule was "start recording when the
+session opens", but it lived inside the recording skill, and Claude only loads a skill
+when the task seems to need it. The session opened with "is Quilter done yet?", so
+Claude loaded the Quilter skill, and nothing started recording until Jeff noticed ten
+minutes later. The fix, in review now, is a small session-start hook. When a session
+opens inside the workspace with recording turned on, it puts "start the recording first"
+in front of Claude before the first message. It stays quiet in the nightly unattended
+runs, which never film.

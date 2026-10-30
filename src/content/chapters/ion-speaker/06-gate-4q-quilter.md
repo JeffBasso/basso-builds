@@ -4,7 +4,7 @@ title: "AI layout with Quilter: what it can and can't be trusted with"
 order: 6
 gate: "Gate 4Q"
 date: 2026-10-29
-summary: "Run 1 put 14 parts on the wrong side of the isolation barrier. Run 2, with the PoE island done by hand, still went wrong: a capped DRC list hid nine open connections, and Quilter put about 125 parts on the bottom. Run 3 enforces both with keep-outs."
+summary: "Run 1 put 14 parts on the wrong side of the isolation barrier. Run 2, with the PoE island done by hand, still went wrong: a capped DRC list hid nine open connections, and Quilter put about 125 parts on the bottom. Run 3 enforces both with keep-outs, and 24 vias came out of SMD pads while it runs."
 status: draft
 ---
 
@@ -146,13 +146,47 @@ Before run 3:
 - 127 parts and 1,080 tracks and vias are locked. Quilter gets 206 parts and 613
   connections, all on the secondary side.
 
-Run 3 went in on October 29 at 11:41 with the same settings as run 2. One question is
-still open for Gate 5: the hand routing left 11 vias inside SMD pads. Those either
-have to move, or the order has to call for filled and capped vias.
+Run 3 went in on October 29 at 11:41 with the same settings as run 2. The hand routing
+also left vias inside SMD pads, which has since been fixed (see the evening update below).
 
 We also gave the large parts real 3D models while run 3 runs (the transformers,
 inductors, heatsinks, diodes and the converter IC), sized from their datasheet drawings.
 That way the renders, and later the enclosure fit check, show true heights.
+
+## Update, Oct 29 (evening): vias out of the pads, run 3 still routing
+
+**Vias in pads.** We first counted 11 vias sitting inside SMD pads, all from the hand
+routing of the PoE island. A small script that checks every via against every SMD pad found
+**24**: the first count had been picked out by eye. The cause was in our own scripts:
+the island router and the stitching script only checked clearance, and a via inside a
+pad on the same net passes a clearance check. A via in an open pad wicks solder away from the joint during
+reflow, so each one either moves or the order has to pay for filled and capped vias. We
+moved them:
+
+| What | Count |
+|---|---|
+| Vias found inside SMD pads | 24 |
+| Moved just off the pad, same net | 22 |
+| Dropped as redundant | 1 |
+| Rerouted with its trace (the converter feedback net at a decoupling cap) | 1 |
+
+Afterwards: **0 vias in pads, DRC still 0 errors, island still 0 open connections.** The
+island router script now refuses to drop a via inside a pad, so this can't come back the
+same way. Run 3 was submitted before the fix, so whichever candidate we pick gets the
+same fix on top of it.
+
+**Why "nothing on the bottom" at all.** The board stands on edge in its wall slot with
+its bottom side against a 2 mm foam (EVA) pad. The requirement is "bottom side 2 mm
+maximum, chip resistors and capacitors only". A few of the parts run 2 put underneath
+were taller than that: the SMB-package TVS diodes are about 2.3 mm. Bottom-side SMT also
+costs a second assembly pass, and anything there has to survive the wave that solders
+the through-hole parts. Quilter has no "chip passives only" setting, so for run 3 we
+banned bottom-side parts outright. The top side has room: the 206 parts left for
+Quilter need about 28 % of the free top area.
+
+**Run 3 progress.** After about seven hours Quilter had six placements, each scoring 77-78
+of its checks met, 28-29 unmet and none failed. Its router was 33 of 51 steps in. There
+is no routed board to review yet, so Gate 4Q stays open.
 
 ## Files
 
