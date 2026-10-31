@@ -90,3 +90,26 @@ The Ethernet pairs need 100 ohms differential and USB needs 90 ohms. A hand calc
 
 **ENIG** instead of HASL: flat pads for the 0.4 mm-pitch QFNs, and gold for the
 card-edge fingers, with hard gold and a bevel specified on the order.
+
+## Update, Oct 30: the outline is reopened
+
+After three Quilter runs that couldn't route the 180 x 70 mm board (see the Quilter chapter), we looked again at
+what limits the outline. The answer was the sled: a board standing in a slot above a card-edge socket can only be
+about 3 in tall. So the proposal now is no sled at all.
+
+- **Mounting:** the board sits on standoffs behind the main grille, under an opaque cover, a few screws in the
+  corners. The bay is 14.5 in wide and the grille section below the drivers is tall enough for a board of up to
+  about 330 x 165 mm. We start at about 250 x 150 mm and grow only if routing needs it.
+- **Zones by heat:** air enters at the bottom and leaves at the top, so the hot parts go high (both TAS5825M
+  amplifiers and their filters, the PoE converter, the bucks) and the temperature and humidity sensor goes at the
+  bottom edge on a slotted tab, per Sensirion's design guide (distance, milled slots, thin copper, out of heated
+  air). The ESP32-S31 and Ethernet PHY sit in the middle; the antenna moves to a side edge, away from the metal
+  heatsinks, with the board notched under it as Espressif's hardware design guidelines show.
+- **Connectors:** a strip along the top edge, hidden by a cover plate: a pluggable speaker terminal block (Phoenix
+  MSTB, 12 A per contact), the 1-wire probe header, two cables to the mic board and two or three Qwiic I2C ports for
+  add-ons. The RJ45 (Amphenol RJHSE-3380, vertical, rated 1.5 A per contact and for PoE++) faces straight out under
+  its own shroud; a right-angle patch cord keeps the depth down.
+- **Still one-sided** (top-side assembly only), black solder mask with ENIG.
+
+This reopens the schematic (the card edge becomes real connectors) and the placement gate. The isolation island,
+which was finished and checked by hand, comes across unchanged.

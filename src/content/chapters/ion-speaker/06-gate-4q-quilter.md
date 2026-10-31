@@ -4,7 +4,7 @@ title: "AI layout with Quilter: what it can and can't be trusted with"
 order: 6
 gate: "Gate 4Q"
 date: 2026-10-29
-summary: "Run 1 put 14 parts on the wrong side of the isolation barrier. Run 2, with the PoE island done by hand, still went wrong: a capped DRC list hid nine open connections, and Quilter put about 125 parts on the bottom. Run 3 enforces both with keep-outs, and 24 vias came out of SMD pads while it runs."
+summary: "Run 1 put parts on the wrong side of the isolation barrier, run 2 left about 45 nets unrouted, and run 3 routed nothing after 25 hours. The fix wasn't another Quilter setting: the board was too crowded, so the mechanics are being reworked."
 status: draft
 ---
 
@@ -187,6 +187,31 @@ Quilter need about 28 % of the free top area.
 **Run 3 progress.** After about seven hours Quilter had six placements, each scoring 77-78
 of its checks met, 28-29 unmet and none failed. Its router was 33 of 51 steps in. There
 is no routed board to review yet, so Gate 4Q stays open.
+
+## Update, Oct 30: run 3 routed nothing
+
+Run 3 ran for just over 25 hours and failed: Quilter made six placements and its router finished none of them.
+Its message asks us to get in touch, so Jeff has written to their support. The console also showed that both
+hand-entered switching-converter entries (the 5 V and 3.3 V bucks) were dropped because their input and output
+capacitors weren't named, so the bucks went in without their hot-loop constraint. That has to be fixed for any
+next run, but it wouldn't stop routing.
+
+The real signal is two runs in a row: run 2 left about 45 nets unrouted (the RGMII bus, three Ethernet pairs, the
+amplifier outputs) and run 3 finished nothing. The board was simply too crowded for four layers with every part on
+one side and an isolation moat across it.
+
+We first worked out a six-layer board: PCBWay's standard 1.6 mm build (0.12 mm prepreg to the outer layers, two
+0.43 mm cores), signal / ground / signal / signal and power / ground / signal. The impedance numbers
+(IPC-2141A microstrip) gave a surprise: with that thin outer dielectric a 100-ohm pair is 0.15 mm wide with 1 oz
+copper, but about 0.10 mm with 2 oz - too fine to etch. That alone ruled out the 2 oz outer layers the spec asked
+for on the speaker fingers.
+
+Then we stepped back from layer count to the mechanics, which is where the real room was. That story is in the
+placement and enclosure chapters: the board is coming out of its sled and going behind the grille, at more than
+twice the area. Six layers is on hold until we have PCBWay quotes for both options.
+
+**What went wrong, in one line:** we tuned rules and keep-outs for three runs while the outline itself was the
+constraint. Settle the mechanics before placement.
 
 ## Files
 

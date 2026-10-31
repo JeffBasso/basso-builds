@@ -53,3 +53,11 @@ secret. Never invent values. Discuss mains safety first.
 
 19 guard cases run in CI on Windows, and CI also runs the hook command as it's actually
 registered, against an off-list website, and requires it to block.
+
+## Update, Oct 30: datasheets, and protecting the tools from every session
+
+Two guard changes came out of a day of sourcing connectors. Manufacturer datasheet sites (Amphenol, Phoenix
+Contact, JST, Molex, TI, Analog Devices, Sensirion, Hi-Link, Espressif) are now allowed in the browser for reading
+and downloading only - no uploads, form filling or page scripts there. And the rule that protects the kit's
+installed tools and the scanned books now applies to every Claude Code session, not just ones started inside the
+PCB workspace, so the new Kit window can't edit them either.

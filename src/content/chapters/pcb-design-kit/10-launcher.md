@@ -38,3 +38,11 @@ A checkbox turns Chrome on for the session (needed for Quilter and PCBWay).
 If recording is on, the launcher **starts OBS first,** minimized, and waits for its
 WebSocket port. The OBS connector only connects if OBS is already running when Claude
 Code starts.
+
+## Update, Oct 30: a Kit button
+
+Changing the kit used to happen from inside a board session, which mixed tool work into that board's recording
+and wrap-up. The launcher now has a **Kit (tool design)** button that opens Claude Code in the kit's own working
+copy, with its own rules: every change is a branch and a pull request, the installed copies are never edited,
+tests run before the PR, and its end-of-day is just "push and list the open PRs". The launcher also starts Chrome
+before Claude Code, so the browser tools are there from the first message.
