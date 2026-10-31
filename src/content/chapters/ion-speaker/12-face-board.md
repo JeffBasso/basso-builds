@@ -47,3 +47,15 @@ The only listed substitute is marked "similar" and hasn't been checked.
   driving the amps, and would force changes to the amp board.
 
 Replacements are still being picked.
+
+## Update, Oct 30: the face board becomes the mic board
+
+With the amp board now behind the grille, the temperature and humidity sensor (SHT41) moves onto it, on a slotted
+tab at its cool bottom edge. The microphones and the XVF3800 stay on a small board at the top of the grille, as far
+from the drivers as possible. The LD2450 radar joins them there: its manual recommends mounting at 1.5 to 2 m,
+which the low amp board can't reach. The cover in front of it must be metal-free and, ideally, a whole number of
+half-wavelengths thick at 24 GHz (about 3.9 mm in ABS).
+
+The link becomes two ready-made Molex PicoBlade cables bought in fixed lengths (no cable building): a 14-way audio
+cable carrying both I2S buses with a ground beside each clock, and a 10-way cable for 5 V, I2C, the XVF3800 reset
+and the radar's UART.

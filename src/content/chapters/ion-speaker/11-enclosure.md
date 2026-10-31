@@ -64,3 +64,15 @@ parallel to the drywall,** like a card going into a slot.
 - **Low-visibility options** for some rooms: a plaster-over panel driven by two
   exciters (about 150 Hz up, with the sub below), a mud-in frame with a painted
   perforated grille, or a narrow slot grille. One test panel will be built over the winter.
+
+## Update, Oct 30: no sled after all
+
+The amp board is moving out of the sled and onto the face of the compartment, right behind the main grille,
+under an opaque cover. The reasons are in the placement chapter: the sled capped the board at about 3 in tall, and
+the board needs more room than that. What it changes here:
+
+- No dock board, card-edge socket or printed rails; the board fixes to standoffs with a few screws.
+- The grille over bay 1 grows to cover both the drivers and the board section below them, about 14.5 x 23 in.
+- The cover needs vents low and high so air moves up past the amplifiers, nothing metal, and an open window or
+  15 mm of clearance in front of the Wi-Fi antenna.
+- The RJ45 faces the grille under a shroud, so the board-to-grille gap must fit a right-angle Cat6 plug.
