@@ -2,7 +2,7 @@
 project: ion-speaker
 title: "The stud-bay enclosure"
 order: 11
-summary: "A real plywood box in the wall, not a lined cavity: two adjacent bays per speaker, a transmission line for the subs, and a slot at the bottom where the amp board drops in like a card."
+summary: "A real plywood box in the wall, not a lined cavity. It started as two bays with an amp sled, and is now one 2x6 bay per speaker holding the drivers, a transmission line for the subs, and the amp board on the face. The enclosure's Gate 1 passed on Nov 2."
 status: draft
 ---
 
@@ -90,3 +90,55 @@ That Gate 2 has three things to prove:
 - **The fit:** volumes, line or port lengths, and the depth stack in a 3.5 in bay.
 - **Where the amp board sits** in the bay, and how its heat gets out.
 - **The sub-to-woofer crossover** that goes with the chosen alignment.
+
+## Update, Nov 2: the enclosure passes its Gate 1, in 2x6 walls
+
+The enclosure is now its own part of the project, with its own gates, and it
+replaces the box that had been planned earlier. Its requirements were written from a
+single-bay design spec, checked against the project's shared requirements, and
+approved on **November 2, 2026**.
+
+### What we decided and why
+
+- **2x6 walls, interior walls only.** A transmission line needs depth that a 3.5 in
+  bay doesn't have. No speaker is installed yet and every wall is open, so all
+  eight boxes go into 5.5 in deep bays before the drywall goes up. Exterior walls
+  are out, so no insulation gets displaced.
+- **The mid-bass is now a Dayton SIG150-4** (5.25 in, 4 ohm). It replaces the RS180-8,
+  which had never been ordered. The tweeter (Dayton DC28F-8) and the two Dayton
+  SD215A-88 subs stay.
+- **The tweeter and mid-bass sit 4 to 5 ft up.** The exact height is set at Gate 2.
+- **Each sub gets its own BTL channel on the amp, with no bridging.** Both get the
+  same signal, with separate level, delay and EQ kept close to matched. Each sub
+  is about 3.2 ohm, right at the TAS5825M's minimum load for BTL, so both channels
+  get an output limiter. The amp board's speaker connector goes to 8 positions to suit.
+- **5/8 in Type X drywall** on the room side, and mass-loaded vinyl on the far-side
+  wall to keep the next room quiet.
+- **Fire code:** with no speaker in a garage wall, no rated wall assembly is expected.
+  The plan is fireblocking at the plates and sealant where the Cat6 goes through.
+  The local code sections still have to be checked against the code text before Gate 3.
+
+### The numbers
+
+The depth stack in a 2x6 bay: 5/8 in drywall, a 3/4 in baffle, a 0.25-0.5 in
+isolation gap and a 1/2 in back panel leave **4.375-4.625 in (111-117 mm) inside**.
+Every driver's mounting depth has to fit that, which gets checked against the Dayton
+datasheets at Gate 2.
+
+The width didn't add up. A 14.5 in clear bay minus two 1/2 in sides leaves **13.5 in
+inside**. The spec's 6 in driver chamber, 8 in side channel and 1/2 in divider come to
+14.5 in. With a 6 in chamber, the side channel can be 6.5-7 in at most. The line
+simulation at Gate 2 settles it.
+
+### What's next (Gate 2)
+
+- Driver datasheets: Thiele-Small parameters and mounting depths against the depth stack.
+- A folded-line simulation for the subs, tuned around 40 Hz: where the subs sit, the
+  side-channel constriction, stuffing, and the floor chute sized so it doesn't chuff.
+- Crossovers: mid-bass to tweeter as an LR4 at 1.5-3 kHz, and the sub hand-off at about 80-100 Hz.
+- Where the amp board sits on the baffle, and how tall its parts can be.
+
+### Files
+
+The enclosure's folder in the project repo holds the approved requirements, design
+notes with the depth and width checks, a plan for each open issue, and the source list.
