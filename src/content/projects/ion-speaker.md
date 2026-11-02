@@ -16,7 +16,7 @@ stats:
   - { label: Crossover, value: "DSP in firmware" }
   - { label: Controller, value: "ESP32-S31" }
   - { label: Amplifiers, value: "TI TAS5825M class-D" }
-  - { label: Fits in, value: "A 4-inch stud bay" }
+  - { label: Fits in, value: "One 2x4 stud bay, subs included" }
   - { label: Layout path, value: "KiCad + Quilter" }
 ---
 
@@ -31,8 +31,8 @@ Bluetooth and Matter, so each room gets audio and sensing from one install.
 ## Where it started
 
 The design derives from Sonocotta's open-source **Dual-DAC Audio Brick (rev D)**. Ion moves the
-power supply onto the board, swaps in a newer controller, and fits the electronics on a slide-out
-sled so a board can be serviced without cutting drywall.
+power supply onto the board, swaps in a newer controller, and mounts the board behind the grille
+under a cover, so it can be serviced from the room without cutting drywall.
 
 ## What you'll learn
 

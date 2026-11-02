@@ -86,3 +86,33 @@ Gate 2 picks every part to meet these requirements.
 One question from this stage is still open for the enclosure: Dayton lists the sub's
 overall depth as 95 mm, while the spec assumed about 74 mm. That has to be checked
 against the 2x4 bay.
+
+## Update, Nov 1: requirements for the whole speaker
+
+Ion is now more than one board. There's the amp board, a small mic board, and the
+enclosure. So on **November 1, 2026** we wrote one shared requirements document for all
+three, plus an interfaces file that holds every number more than one part depends on
+(outline, mounting, heights, connectors, the heat path), each with the part that owns it.
+The amp board's own requirements carry over unless this changes them.
+
+What it settled:
+
+- **One stud bay per speaker, everything in it, subs included.** That replaces the
+  two-bay plan in the enclosure chapter. All eight speakers get subs. The wall is 2x4
+  framing with 8 ft ceilings: 3.5 in deep, about 14.5 in between studs. If something
+  won't fit, the enclosure's Gate 2 has to show it with numbers.
+- **Loudness target: 100 dB peaks at 3 m from a stereo pair.** With a placeholder
+  sensitivity of 86 dB, the woofer channel at 24 V gets about 36 W into 8 ohms, which
+  works out to roughly 95-98 dB at 3 m in the direct field. That's short, and we wrote it
+  down as short instead of hoping. Room gain may close it; if not, the choice is a lower
+  target, a higher supply voltage within the TAS5825M's limit, or a different crossover.
+  It gets settled at Gate 2 with real datasheet numbers.
+- **Heights:** tweeter about 40 in off the floor (seated ear height); mic board about
+  1.5 m, which suits both the voice mics and the LD2450 radar's 1.5-2 m mounting range.
+- **Power, for the whole house:** the same 210 W switch feeds all eight speakers.
+  Home Assistant arbitrates the LLDP power requests. With everything playing at once,
+  each speaker has to run on an allocation **below 26 W at the switch**, so the
+  negotiated class can never be the plan. Music peaks above the allocation come from
+  bulk capacitance on the 24 V rail.
+- **Schedule:** eight speakers live by the end of 2027; the enclosures wait for a CNC
+  arriving in spring 2027.

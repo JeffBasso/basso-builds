@@ -106,6 +106,31 @@ The Gate 3 checklist found one real failure: the 1-wire and sled-present lines a
 card edge had no ESD protection, so it was added. Accepted deviations were logged with
 reasons, including the unfused bench 24 V input and the best-effort TVS.
 
+## Update, Nov 1: a new connector sheet for the face-mount board
+
+Moving the board out of the sled and onto the face of the bay (see the placement
+chapter) reopened this gate for the connectors. The card edge is gone, so the
+connector sheet was redrawn as a **draft**. It hasn't been reviewed or approved yet.
+
+| Connector | Part | Notes |
+|---|---|---|
+| Ethernet | Amphenol RJHSE-3380, vertical RJ45 | faces out under a shroud; footprint drawn from Amphenol's drawing |
+| Speakers | Phoenix MSTBA 2,5/6-G-5,08 header | sub, woofer and tweeter pairs |
+| Mic board | two Molex PicoBlade headers | ready-made Molex 15134 cables |
+| Expansion | two Qwiic ports | on a second I2C bus |
+| Sensors | 1-wire header, SHT41 on board | SHT41 at the cool edge |
+
+ERC is at zero errors, and a readability pass afterwards left the netlist unchanged.
+
+Two things turned up while reading the connector datasheets:
+
+- **The sub puts about 10 A peak through one speaker contact.** That's exactly the
+  terminal block's 10 A rating, with no margin. Those traces need to be about 4 mm wide,
+  so they get their own net class. Whether to keep the 6-position block or move to 8
+  positions with two contacts per sub wire is open.
+- **The ready-made PicoBlade cables are wired reversed** end to end, and they're 28 AWG. The mic board's pinout has to account for that, and its 5 V
+  load is held to 1.0 A or less.
+
 ## Files
 
 The board repo holds a six-sheet `schematic.pdf` and a `calc/` folder with a script
