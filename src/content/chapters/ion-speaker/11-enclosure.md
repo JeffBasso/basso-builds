@@ -76,3 +76,17 @@ the board needs more room than that. What it changes here:
 - The cover needs vents low and high so air moves up past the amplifiers, nothing metal, and an open window or
   15 mm of clearance in front of the Wi-Fi antenna.
 - The RJ45 faces the grille under a shroud, so the board-to-grille gap must fit a right-angle Cat6 plug.
+
+## Update, Nov 1: one bay, subs included
+
+The two-bay layout above is gone. The project requirements (see the Gate 1 chapter)
+now say **one stud bay per speaker, with the woofer, tweeter, both subs, the amp board
+and the mic board all inside it.** The earlier options, a sealed woofer box of about
+7 L, the sub transmission line and a mass-loaded line for the woofer, become inputs to
+the enclosure's own Gate 2 rather than decisions.
+
+That Gate 2 has three things to prove:
+
+- **The fit:** volumes, line or port lengths, and the depth stack in a 3.5 in bay.
+- **Where the amp board sits** in the bay, and how its heat gets out.
+- **The sub-to-woofer crossover** that goes with the chosen alignment.
