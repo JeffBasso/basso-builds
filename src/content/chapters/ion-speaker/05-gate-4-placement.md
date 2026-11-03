@@ -113,3 +113,18 @@ about 3 in tall. So the proposal now is no sled at all.
 
 This reopens the schematic (the card edge becomes real connectors) and the placement gate. The isolation island,
 which was finished and checked by hand, comes across unchanged.
+
+## Update, Nov 3: the face-mount board is placed (draft)
+
+With the schematic approved again, the PCB caught up with it: 368 footprints, with the board and
+schematic in exact agreement. This is a **draft for review**, not an approved gate.
+
+- **Outline:** 250 x 150 mm, with the isolated PoE island in a pocket that also holds the RJ45.
+- **Zones:** connectors on a strip along the top edge, the RJ45 chimney to the top edge, the bench and
+  bank connectors on the right edge, and the amplifiers and converter high. The room-air sensor is on the
+  bottom cool zone.
+- **Not placed:** 204 parts are parked for Quilter. No Quilter run happens until the enclosure's Gate 2 fixes
+  the board's mounting space.
+- **DRC:** 0 errors inside the outline.
+- **Lesson:** every write through the schematic editor tool strips junctions, so a repair script and an
+  ERC run follow each edit.

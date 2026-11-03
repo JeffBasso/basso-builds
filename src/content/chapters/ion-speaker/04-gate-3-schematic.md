@@ -227,6 +227,44 @@ PSE-side allocations. At Gate 4 the PCB catches up: the 8-position block, the tw
 new output filters, the bank connector and the precharge parts. A quick length
 budget says the top-edge connector strip still has about 60 mm to spare.
 
+## Update, Nov 3: Gate 3 approved again, for the face-mount board
+
+The redone schematic was reviewed against the board's checklists and approved on
+**November 3, 2026**.
+
+### What we decided and why
+
+Seven connector decisions closed the draft sheet:
+
+- **RJ45 shield:** tied to ground through a 2 kV capacitor, with the alternative resistor left
+  unpopulated.
+- **Status LED:** a WS2812B driven through a TI SN74AHCT1G125 buffer at 5 V, with a 4.7 k
+  pull-down on the data line, so the 3.3 V GPIO meets the LED's input threshold.
+- **Qwiic and 1-wire power:** one shared Bourns MF-USMF035-2 resettable fuse (1210).
+- **1-wire probe:** a JST XH 3-pin right-angle header (S3B-XH-A).
+- **Qwiic:** two ports, as drawn.
+- **Bench 24 V input:** a second Phoenix 1757242 two-position block, the same part as the
+  capacitor-bank connector.
+- **Cover-present switch:** dropped, which frees one GPIO.
+
+The RJ45 went back to a right-angle jack on the top edge after Jeff saw the draft render
+(Amphenol RJHSE-5380).
+
+### What went wrong
+
+- **The schematic editor's tool for pushing the schematic onto the board only half worked** and was
+  reverted. The update was run by hand in KiCad instead, and the kit got two issues: a headless
+  update, and the junction stripping.
+- **Test points lost their "exclude from BOM and position files" flags** in that update. They were
+  fixed on the schematic and the board.
+- **The WS2812B datasheet in hand is for the V5, but the stock part is the V6.** The V6 sheet has to be
+  fetched before the order.
+
+ERC is at zero errors. The review (our own checklist plus the PoE and audio rules, and the
+checklists from Wilson, Ott, IPC-2221, Johnson and Graham, and the two cookbooks) left no open
+failure. The BOM is 345 parts, 340 of them on the PCB, so the Quilter path stands. The Ritchey and
+Montrose checklists run at the layout review, not here.
+
 ## Files
 
 The board repo holds a six-sheet `schematic.pdf` and a `calc/` folder with a script
