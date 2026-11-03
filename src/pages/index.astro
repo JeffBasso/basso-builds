@@ -3,6 +3,8 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Cover from '../components/Cover.astro';
 import Status from '../components/Status.astro';
+import ChapterRoute from '../components/ChapterRoute.astro';
+import { url } from '../lib/url';
 import { projectStart } from '../lib/start';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
@@ -10,6 +12,23 @@ const chapters = await getCollection('chapters');
 const start = Object.fromEntries(await Promise.all(projects.map(async (p) => [p.id, await projectStart(p.id)])));
 const countOf = (id: string) => chapters.filter((c) => c.data.project.id === id).length;
 const publishedOf = (id: string) => chapters.filter((c) => c.data.project.id === id && c.data.status === 'published').length;
+
+// Each project's chapters for the route: in order, newest written one marked as the default readout.
+const fmt = (d?: Date) => d?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+const route = Object.fromEntries(projects.map((p) => {
+  const list = chapters
+    .filter((c) => c.data.project.id === p.id)
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((c) => ({
+      order: c.data.order, title: c.data.title, summary: c.data.summary, status: c.data.status,
+      gate: c.data.gate, date: fmt(c.data.date), when: c.data.date?.getTime() ?? 0,
+      href: url(`projects/${p.id}/${c.id.split('/').pop()}/`),
+    }));
+  // Newest written chapter by date (later order wins a tie); falls back to the first chapter.
+  let latest = 0, best = -1;
+  list.forEach((c, i) => { if (c.status === 'published' && c.when >= best) { best = c.when; latest = i; } });
+  return [p.id, { list: list.map(({ when, ...c }) => c), latest }];
+}));
 
 // Hero traces: drawn on a 20 unit grid with 45 degree jogs, like routed copper.
 const traces = [
@@ -88,6 +107,7 @@ const pads = [[760, 360], [900, 220], [820, 500], [1120, 460], [820, 100], [560,
                 {p.data.stats.slice(0, 4).map((s) => (<div><dt class="meta">{s.label}</dt><dd>{s.value}</dd></div>))}
               </dl>
             )}
+            <ChapterRoute chapters={route[p.id].list} latest={route[p.id].latest} name={p.data.title} />
             <a class="go" href={start[p.id]}>Start reading: Chapter 1 →</a>
           </div>
         </article>

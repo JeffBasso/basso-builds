@@ -1,0 +1,131 @@
+---
+import { statusLabel } from '../lib/url';
+
+// A project's chapters drawn as a routed trace: one pad per chapter, solid where the
+// chapter is written, half filled while drafting, hollow while planned. Hovering or
+// focusing a pad reads that chapter out below; the default readout is the newest one.
+// Everything shown comes from the chapter files, nothing is made up here.
+export interface RouteChapter {
+  order: number;
+  title: string;
+  summary: string;
+  status: string;
+  gate?: string;
+  date?: string; // already formatted
+  href: string;
+}
+interface Props { chapters: RouteChapter[]; latest: number; name: string }
+const { chapters, latest, name } = Astro.props;
+const shown = chapters[latest] ?? chapters[0];
+const meta = (c: RouteChapter, prefix: string) =>
+  [prefix, c.gate, c.date, statusLabel[c.status] ?? c.status].filter(Boolean).join(' · ');
+---
+{chapters.length > 0 && (
+  <div class="route" data-route>
+    <ol class="pads" aria-label={`${name}: chapter route`}>
+      {chapters.map((c, i) => {
+        const live = c.status === 'published';
+        const prev = chapters[i - 1]?.status === 'published';
+        const next = chapters[i + 1]?.status === 'published';
+        return (
+          <li class:list={['cell', c.status, { 'live-l': live && prev, 'live-r': live && next, latest: i === latest }]} style={`--i:${i}`}>
+            <a
+              href={c.href}
+              aria-label={`Chapter ${c.order}: ${c.title} (${statusLabel[c.status] ?? c.status})`}
+              data-title={c.title}
+              data-summary={c.summary}
+              data-meta={meta(c, `Chapter ${c.order}`)}
+            ><span class="pad"></span></a>
+          </li>
+        );
+      })}
+    </ol>
+
+    <div class="readout" data-readout aria-live="off">
+      <span class="meta r-meta">{meta(shown, `Latest: chapter ${shown.order}`)}</span>
+      <a class="r-title" href={shown.href}>{shown.title}</a>
+      <p class="r-sum">{shown.summary}</p>
+    </div>
+
+    <p class="legend meta" aria-hidden="true">
+      <span class="k published"><i></i>Written</span>
+      <span class="k draft"><i></i>In progress</span>
+      <span class="k planned"><i></i>Coming</span>
+    </p>
+  </div>
+)}
+
+<script>
+  // Swap the readout to whichever pad is hovered or focused; put the newest back on leave.
+  for (const route of document.querySelectorAll<HTMLElement>('[data-route]')) {
+    const out = route.querySelector<HTMLElement>('[data-readout]');
+    if (!out) continue;
+    const metaEl = out.querySelector<HTMLElement>('.r-meta')!;
+    const titleEl = out.querySelector<HTMLAnchorElement>('.r-title')!;
+    const sumEl = out.querySelector<HTMLElement>('.r-sum')!;
+    const home = { meta: metaEl.textContent ?? '', title: titleEl.textContent ?? '', href: titleEl.href, sum: sumEl.textContent ?? '' };
+    const show = (m: string, t: string, h: string, s: string) => { metaEl.textContent = m; titleEl.textContent = t; titleEl.href = h; sumEl.textContent = s; };
+    const on = (e: Event) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('.pads a');
+      if (a) show(a.dataset.meta ?? '', a.dataset.title ?? '', a.href, a.dataset.summary ?? '');
+    };
+    const off = () => show(home.meta, home.title, home.href, home.sum);
+    route.addEventListener('pointerover', on);
+    route.addEventListener('focusin', on);
+    route.addEventListener('pointerleave', off);
+    route.addEventListener('focusout', (e) => { if (!route.contains((e as FocusEvent).relatedTarget as Node)) off(); });
+  }
+</script>
+
+<style>
+  .route { --ease: cubic-bezier(0.23, 1, 0.32, 1); display: grid; gap: .7rem; margin-top: .4rem; padding-top: .9rem; border-top: 1px solid var(--line); }
+  .pads { list-style: none; margin: 0; padding: 0; display: flex; }
+  .cell { position: relative; flex: 1 1 0; min-width: 0; height: 30px; }
+  .cell a { position: absolute; inset: 0; display: grid; place-items: center; outline-offset: 0; }
+
+  /* Trace segments either side of the pad: copper where both neighbours are written, else dashed. */
+  .cell::before, .cell::after { content: ''; position: absolute; top: 50%; height: 0; width: 50%; border-top: 2px dashed var(--line); transform: translateY(-1px); }
+  .cell::before { left: 0; }
+  .cell::after { right: 0; }
+  .cell:first-child::before, .cell:last-child::after { display: none; }
+  .cell.live-l::before, .cell.live-r::after { border-top: 3px solid var(--copper); transform: translateY(-1.5px); }
+
+  .pad { position: relative; z-index: 1; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--muted); transition: transform .14s var(--ease), box-shadow .14s var(--ease); }
+  .published .pad { background: var(--copper); border-color: var(--copper); }
+  .draft .pad { border-color: var(--copper); background: linear-gradient(90deg, var(--copper) 50%, var(--bg) 50%); }
+  .planned .pad { border-style: dashed; }
+  .cell.latest .pad { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); }
+  .cell a:focus-visible .pad { outline: 3px solid var(--accent-ink); outline-offset: 4px; }
+  @media (hover: hover) and (pointer: fine) { .route .cell a:hover .pad { transform: scale(1.35); } }
+  .cell a:active .pad { transform: scale(.95); }
+
+  .readout { display: grid; gap: .2rem; min-height: 6.6rem; align-content: start; }
+  .r-meta { color: var(--muted); }
+  .r-title { font: 800 1rem/1.3 var(--sans); color: var(--ink); letter-spacing: -0.01em; text-wrap: balance; }
+  .r-title:hover { color: var(--accent-ink); }
+  .r-title:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 3px; }
+  .r-sum { margin: 0; font-size: .9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .legend { margin: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; }
+  .k { display: inline-flex; align-items: center; gap: .4rem; }
+  .k i { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--muted); display: block; }
+  .k.published i { background: var(--copper); border-color: var(--copper); }
+  .k.draft i { border-color: var(--copper); background: linear-gradient(90deg, var(--copper) 50%, transparent 50%); }
+  .k.planned i { border-style: dashed; }
+
+  /* Pads light up one after another when the project row enters the screen. */
+  :global(.js) .pad { opacity: 0; transform: scale(.6); }
+  :global(.js .project.in) .pad { opacity: 1; transform: none; transition: opacity .3s var(--ease) calc(var(--i) * 40ms + 350ms), transform .3s var(--ease) calc(var(--i) * 40ms + 350ms); }
+  :global(.js .project.in) .cell a:hover .pad { transition-delay: 0s; }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.js) .pad { transform: none; }
+    :global(.js .project.in) .pad { transition: opacity .3s ease-out; }
+    .route .cell a:hover .pad { transform: none; }
+  }
+
+  @media (max-width: 480px) {
+    .pads { flex-wrap: wrap; }
+    .cell { flex: 0 0 calc(100% / 8); }
+    .cell::before, .cell::after { display: none; }
+  }
+</style>
