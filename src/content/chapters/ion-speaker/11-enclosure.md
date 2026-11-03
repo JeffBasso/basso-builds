@@ -138,6 +138,21 @@ simulation at Gate 2 settles it.
 - Crossovers: mid-bass to tweeter as an LR4 at 1.5-3 kHz, and the sub hand-off at about 80-100 Hz.
 - Where the amp board sits on the baffle, and how tall its parts can be.
 
+## Update, Nov 3: the Gate 2 package
+
+The enclosure's architecture work is done and waiting for review. The five decisions on the table:
+
+- **Chamber width:** keep the 6 in driver chamber and a 6.75 in side channel. A first-pass 1-D line model shows
+  under 1 dB difference once the line is stuffed. A Hornresp cross-check is still to be run.
+- **Woofer box:** a sealed chamber for the SIG150-4 at Qtc 0.8 and 14 in tall (or 0.707 and 20 in).
+- **Heights:** tweeter 58 in, woofer 51 in, subs 69 in, with the amp board centered around 30 in.
+- **Sub line:** an 85 in line is the 40 Hz quarter-wave. All three drivers fit the depth stack at worst-case
+  depth. The subs can't sit beside the chamber, since their cut-out is wider than the side channel.
+- **Crossovers:** a 25 Hz high-pass on the subs (excursion), 90 Hz LR4 to the woofer, 2.0 kHz LR4 to the tweeter.
+
+The line meets the SPL target from about 70 Hz at the 5 A limiter and is about 8 dB short at 40 Hz before room
+gain and EQ, which becomes a bench item.
+
 ### Files
 
 The enclosure's folder in the project repo holds the approved requirements, design
