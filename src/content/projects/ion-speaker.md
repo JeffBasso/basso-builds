@@ -16,7 +16,7 @@ stats:
   - { label: Crossover, value: "DSP in firmware" }
   - { label: Controller, value: "ESP32-S31" }
   - { label: Amplifiers, value: "TI TAS5825M class-D" }
-  - { label: Fits in, value: "One 2x4 stud bay, subs included" }
+  - { label: Fits in, value: "One 2x6 stud bay, subs included" }
   - { label: Layout path, value: "KiCad + Quilter" }
 ---
 
@@ -25,8 +25,9 @@ power and audio. Everything else lives inside the stud bay: an isolated PoE powe
 class-D amplifiers, a DSP crossover that splits sub, woofer and tweeter in firmware, and an ESP32
 that streams over the network with ESPHome and Sendspin.
 
-The same board doubles as the room's sensor hub, with temperature, microphone, radar presence,
-Bluetooth and Matter, so each room gets audio and sensing from one install.
+A small sensors board at the top of the grille adds far-field microphones, radar presence and
+room-air sensing (particulates, humidity, VOC), with Bluetooth and Matter on the amp board, so each
+room gets audio and sensing from one install.
 
 ## Where it started
 
