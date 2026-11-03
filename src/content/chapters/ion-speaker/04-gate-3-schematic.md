@@ -131,8 +131,105 @@ Two things turned up while reading the connector datasheets:
 - **The ready-made PicoBlade cables are wired reversed** end to end, and they're 28 AWG. The mic board's pinout has to account for that, and its 5 V
   load is held to 1.0 A or less.
 
+## Update, Nov 2: each sub gets its own channel, and a capacitor bank on the baffle
+
+Two changes landed on the schematic in one long evening, both driven by the
+enclosure's Gate 1 and the project requirements: the subs no longer share a bridged
+channel, and the 24 V rail gets a large capacitor bank for music peaks.
+
+### What we decided and why
+
+- **Each sub on its own BTL channel, no bridging.** Each Dayton SD215A-88 is about
+  3.2 ohm, right at the TAS5825M's minimum load for BTL, so the sub amplifier runs
+  with its DSP output limiter at about 5 A peak per channel and the chip's
+  cycle-by-cycle current limit switched on (allowed in BTL, not in the bridged mode
+  we left). Both channels take the same sub signal with their own level and EQ. The
+  "PBTL" symbol copy that existed only to let ERC accept tied outputs is gone; the
+  amp is the library part again with four independent output filters.
+- **The speaker block goes to 8 positions:** Phoenix MSTBA 2,5/8-G-5,08 header with
+  the MSTB 2,5/8-ST-5,08 plug, 12 A per contact. Sub 1, sub 2, woofer and tweeter
+  pairs in that order.
+- **A 40 mF capacitor bank, off the board.** Jeff set the burst case: 50 W for
+  50 ms with the rail allowed to sag from 24 V to 20 V. Four Rubycon VXG 35 V
+  10,000 µF snap-in capacitors live on the baffle, on a 2-position Phoenix
+  connector that is plugged only with the power off. The series is 105 °C, 5000 h
+  rated, and must be: the 85 °C, 3000 h class lasts about a year at the board's
+  70 °C assumption, this one 6.5 years, or 25.8 years at 50 °C.
+- **A precharge circuit, not a slow soft-start.** A 100 ohm, 7 W wirewound resistor
+  in the bank's return charges it after power-up, and a FET already on the BOM
+  (FDMS86200) shorts the resistor out once the bank is up. The ESP32 closes that
+  switch when a divider on the bank return reads under 0.5 V, or on a 20 s timer,
+  and only then lets the amplifiers leave standby.
+- **A bleeder across the bank,** trimmed from 2.2 kohm to 100 kohm along with the
+  gate-supply resistors once the always-on cost was added up: the block went from
+  about 0.4 W to about 40 mW on the 24 V rail.
+- **The 24 V TVS stays,** even though its surge clamp can exceed the capacitors'
+  35 V rating: with 40 mF in parallel a 10/1000 µs surge moves the rail about
+  0.4 V, so the TVS never gets there, and the sustained fault (lost feedback) clamps
+  at 27-32 V.
+
+### The numbers
+
+- **Bank size:** C = 2Pt / (V1² − V2²) = 2 × 50 W × 0.05 s / (24² − 20²) = 28.4 mF.
+  Aluminium electrolytics are ±20 %, so the nominal bank must be at least 35.5 mF:
+  four 10,000 µF parts. Three would be short at the tolerance limit. 20 V is not the
+  amp's under-voltage limit (that is 4.5 V); it is output headroom, a 1.6 dB loss at
+  the bottom of the sag.
+- **Sub output inductors:** full-swing peak 24 V / (3.2 + 0.18 + 0.10) ohm = 6.9 A,
+  and the derating rule wants saturation current at 1.2-1.3 times that, 8.3-9.0 A.
+  The Coilcraft XAL7070-103 (7.5 A) fails it; the XAL1010-103 (17.5 A) takes all
+  four sub outputs. The 4 ohm woofer peaks at 5.6 A, so its XAL7070 stays.
+- **Trace widths** (IPC-2221, 10 °C rise, 1 oz outer copper): sub 3.5 A rms at the
+  limiter needs 1.7 mm, the 4 ohm woofer at 72 W needs 2.2 mm. Both speaker net
+  classes are set to 2.5 mm.
+- **PoE budget:** the peak audio ceiling is 157 W (two subs at 40 W, woofer 72 W,
+  tweeter 5 W). At a 10 dB crest factor a node draws 24.6 W at the port, 197 W for
+  eight: inside the 210 W switch. At 8 dB it is 36 W each, over budget, so the
+  firmware caps the loudness tier. Idle is about 4.5 W, loud music at the SPL
+  target about 19 W.
+- **Precharge:** 0.24 A at t = 0, time constant 4 s, 95 % charged in 12 s, 11.5 J
+  dissipated per power-up. Eight nodes restarting together after a switch reboot
+  draw 86 W at t = 0. A shorted bank leaves 5.8 W on the resistor, inside its rating
+  at 50 °C ambient; the firmware raises a fault if the sense line never drops.
+- **Bank ripple:** a class-D sine draws its supply current at twice the audio
+  frequency. Both subs sustained at the limiter put 0.63 A rms through each
+  capacitor, 25 % of its rating.
+
+### What went wrong
+
+- **The first plan was a slow soft-start**, from 0.22 µF to about 10 µF, so the
+  converter itself would charge the bank at 0.6 A. It cannot work: the PoE
+  controller feeds the converter's bias only for about 50 ms after start-up, and
+  with a 1.8 s soft-start the converter's on-time at 50 ms would be shorter than its
+  dead time. The auxiliary winding never takes over and the node restarts forever.
+  Soft-start stays at 0.22 µF.
+- **The precharge resistor started at 39 ohm**, which charges the bank in 5 s but
+  leaves 15 W on a 5 W part if the bank is shorted. The fusible variant doesn't
+  open until 100 W, so it was no help. 100 ohm at 7 W survives the fault; the cost
+  is that full output is available 12-20 s after a power-up, not within the
+  controller's boot time.
+- **The October review had passed the XAL7070 against a 7 A figure.** Recomputed
+  with the datasheet's on-resistance the peak is 6.9 A, and the rule needs 8.3 A of
+  saturation margin. Corrected, with the row in the review marked as such.
+- **The bank sense line first landed on an ADC2 pin,** which this ESP32 family
+  cannot read while Wi-Fi is on. Two GPIO assignments were swapped to put it on
+  ADC1.
+- **The schematic editor dropped 11 T-junctions on every save** of the connector
+  sheet. They were repaired at file level, and a netlist-diff script now runs after
+  every edit: 281 nets before the evening, 290 after, every change accounted for.
+
+### What's next
+
+Gate 3 is not closed yet. Left: the review checklist on the amplifier and
+connector sheets, the firmware sequence written down (bank enable after the sense
+reading, before the amps leave standby), and the citation for the 802.3bt
+PSE-side allocations. At Gate 4 the PCB catches up: the 8-position block, the two
+new output filters, the bank connector and the precharge parts. A quick length
+budget says the top-edge connector strip still has about 60 mm to spare.
+
 ## Files
 
 The board repo holds a six-sheet `schematic.pdf` and a `calc/` folder with a script
 for every non-obvious value: the converter, crystal, I2C pull-ups, heatsink, TVS,
-optocouplers and socket current.
+optocouplers and socket current, and since Nov 2 the bank sizing, start-up, PoE
+budget, capacitor life, bank ripple, precharge and netlist-diff scripts.
