@@ -50,9 +50,11 @@ credit on the silkscreen and in the release notes.
 The board is designed by an AI engineer with a human approving each step. Claude Code
 drives KiCad 10, every value is traced to a datasheet or a reference design, and the
 work stops at eight gates for approval: requirements, architecture, schematic,
-placement, layout, fab files, the order, and bring-up. The chapters that follow are
-those gates, in order, with what was decided, the numbers behind it and what went
-wrong. The tooling itself is its own project:
+placement, layout, fab files, the order, and bring-up. Each gate is worked as a GitHub
+issue and ends in a pull request, and merging the PR is the approval. Each gate passed
+also becomes an episode of the build video, which goes online only after its own
+review. The chapters that follow are those gates, in order, with what was decided, the
+numbers behind it and what went wrong. The tooling itself is its own project:
 [The AI PCB Design Kit](../../pcb-design-kit/01-what-it-is/).
 
 ## What's in the box
