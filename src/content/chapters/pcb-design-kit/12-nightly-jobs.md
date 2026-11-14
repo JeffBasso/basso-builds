@@ -111,6 +111,10 @@ runs. One run carries every queued book through all its steps (the reference lib
 
 ## The build log
 
-The wrap-up's last step drafts chapters for this site from the day's work and opens a pull
-request. The nightly run may open and view PRs but never merge them, so nothing is published
-until that PR is reviewed and merged.
+The wrap-up's last step drafts chapters for this site and opens a pull request. It looks
+back to the last build-log PR, not just the current day, so a skipped night is caught up.
+It covers board and project work, changes to the reusable circuit blocks, and merged kit
+changes; a kit change that alters how the process works also gets the chapters describing
+it rewritten to match. Every run reports a result line, even when nothing was new. The
+nightly run may open and view PRs but never merges them, so nothing is published until that
+PR is reviewed and merged.
