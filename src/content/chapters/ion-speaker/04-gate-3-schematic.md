@@ -265,9 +265,63 @@ checklists from Wilson, Ott, IPC-2221, Johnson and Graham, and the two cookbooks
 failure. The BOM is 345 parts, 340 of them on the PCB, so the Quilter path stands. The Ritchey and
 Montrose checklists run at the layout review, not here.
 
+## Update, Nov 13: the whole board, written as Python
+
+The amp board is now **code-first**. Every one of its 368 parts and 227 nets is also written in
+Python with [SKiDL](https://github.com/devbisme/skidl), and a parity check compares that netlist
+with the drawn schematic. The drawing itself was not redrawn or changed.
+
+### What we decided and why
+
+- **Backport, don't redraw.** A trial on the PoE and power sheet a few days earlier matched the
+  drawing with zero differences. That proved the Python could describe a real sheet. Writing the
+  whole board was the next test: if the code-first path works on a 368-part board, the next board can
+  start in Python.
+- **One function per drawn sheet** (PoE and power, forward converter, MCU, amplifiers, Ethernet,
+  connectors). Every part carries its value, footprint, do-not-place flag, BOM flag and part number,
+  and every no-connect and power flag is written out. A small generator wrote it part by part from
+  the drawn netlist. Cleaning up the converter's output by hand would have taken about an hour a
+  sheet.
+- **The PoE front end comes from a shared block.** That stage is now the `poe_pd` block in the public
+  [pcb-blocks](https://github.com/JeffBasso/pcb-blocks) library. The board's Python calls it, and
+  the copy records which commit it came from (see the kit's "Reusable circuit blocks" chapter).
+- **The Python is the source of truth.** Where the two disagree and the drawing is wrong, the Python
+  keeps the right value. The drawing gets an issue in the board repo, and the parity check keeps
+  flagging it until a board session fixes the drawing. From now on, every schematic change goes into
+  both sides in the same commit, and Gate 5 needs parity at zero.
+
+### The numbers
+
+| Check | Result |
+|---|---|
+| Parts / nets, Python | 368 / 227 |
+| Parts / nets, drawing | 368 / 227 |
+| Differences | 3, all in the drawing |
+| SKiDL's own ERC | no errors or warnings |
+
+The three differences:
+- **R102.** The TPS2373-4's class-B resistor is 90.9R (Class 8) in the Python, but still 249R
+  (Class 6) on the drawing. Class 8 is what the board should ask for, per the TPS2373-4 datasheet's
+  classification table.
+- **R604.** Its value reads "DNP 1M" on the drawing, but its do-not-place attribute is off, so the
+  BOM would still fit it. This counts as two differences: the value and the flag.
+
+### What went wrong
+
+Nothing broke, but the check found two mistakes that every earlier review had passed. A value field
+that says "DNP" doesn't make a part do-not-place. And a strap left at the old power class would have asked the
+switch for 51 W at the PD instead of 71 W.
+
+### What's next
+
+A board session fixes R102 and R604 on the drawing, and parity reaches zero. After that, the Python
+and the drawing move together.
+
 ## Files
 
 The board repo holds a six-sheet `schematic.pdf` and a `calc/` folder with a script
 for every non-obvious value: the converter, crystal, I2C pull-ups, heatsink, TVS,
 optocouplers and socket current, and since Nov 2 the bank sizing, start-up, PoE
-budget, capacitor life, bank ripple, precharge and netlist-diff scripts.
+budget, capacitor life, bank ripple, precharge and netlist-diff scripts. Since Nov 13 it also holds
+the board's Python (`src/`, one module per sheet plus the `poe_pd` block) and the latest parity
+report.
