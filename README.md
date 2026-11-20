@@ -44,6 +44,12 @@ Small images go in `public/images/<project>/` and are referenced as `/images/<pr
 2. **Check** (`.github/workflows/check.yml`) builds the site and rejects video or
    oversized files. A PR can't be merged until it passes. The built site is attached
    to the run as `site-preview` if you want to look before merging.
+   Its **Blocked terms** job (`scripts/check-blocklist.mjs`) fails if a blocked term
+   appears in any page text, alt text, caption or file name, and names the file and
+   line. The site describes the work in its own terms: no third party's name, logo,
+   files or product descriptions. The terms are kept out of this repo, in the
+   `SITE_BLOCKLIST` Actions secret (the PCB Design kit's Update kit sets it from the
+   kit's `site/blocklist.txt`).
 3. Merging deploys the site (`deploy.yml`), live in about a minute.
 
 ## First-time GitHub setup
