@@ -36,3 +36,21 @@ jobs:
           name: site-preview
           path: dist
           retention-days: 7
+
+  # No third party's name, logo, files or product descriptions on the site. The terms live in the
+  # PCB Design kit (private) and reach this public repo only as the SITE_BLOCKLIST secret, so they
+  # are never written here; the log names a hit's file, line and term number, not the term.
+  blocklist:
+    name: Blocked terms
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test the check
+        run: node --test scripts/check-blocklist.test.mjs
+      - name: No blocked terms in page text, alt text, captions or file names
+        env:
+          SITE_BLOCKLIST: ${{ secrets.SITE_BLOCKLIST }}
+        run: node scripts/check-blocklist.mjs
